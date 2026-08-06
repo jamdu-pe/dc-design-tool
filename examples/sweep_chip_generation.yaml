@@ -19,3 +19,8 @@ sweep:                         # 축마다 값 목록 → 곱집합으로 전개
     - nvidia_gb300_nvl72
     - nvidia_vera_rubin_nvl144
   electrical_redundancy: ["N+1", "2N"]
+  # 장비도 축으로 쓸 수 있다. 각 값은 역할 → block_id 묶음이다.
+  # selections:
+  #   - {ups: ups_1250kva}
+  #   - {ups: ups_vertiv_exl_s1_800kva}
+  #   - {ups: ups_schneider_galaxy_vx_500kva}

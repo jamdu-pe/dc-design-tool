@@ -61,6 +61,21 @@ def _region_label(result) -> str:
     return "-"
 
 
+def _echo_selections(result) -> None:
+    """카탈로그 기본값과 다른 장비를 골랐다면 무엇을 썼는지 밝힌다.
+
+    기본값 그대로면 아무것도 찍지 않는다(평소 출력을 늘리지 않기 위해).
+    """
+    swapped = []
+    for role, block_id in sorted(result.selections.items()):
+        chosen = next((c for c in result.candidates.get(role, [])
+                       if c["id"] == block_id), None)
+        if chosen and not chosen["is_default"]:
+            swapped.append(f"{role}={block_id} ({chosen['vendor']} {chosen['model']})")
+    if swapped:
+        typer.echo("장비 교체: " + " / ".join(swapped))
+
+
 def _echo_compliance(report: Optional[ComplianceReport], verbose: bool) -> int:
     """규격검증 요약(및 상세) 출력. 위반 건수 반환."""
     if report is None:
@@ -94,6 +109,7 @@ def build(spec: str = typer.Option(..., help="spec.yaml 경로"),
 
     e = result.electrical
     typer.echo(f"규격 팩: {_region_label(result)}")
+    _echo_selections(result)
     typer.echo(f"랙 {result.rack_count}대 / IT {result.it_power_kw}kW / PUE {e['pue_estimate']}")
     typer.echo(f"UPS {e['ups_qty']}대 / 배터리 {e['battery_energy_kwh']}kWh "
                f"/ 변압기 {e['transformer_qty']}대 / 수전 {e['primary_kv']}kV {e['mv_current_a']}A")

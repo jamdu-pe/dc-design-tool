@@ -70,6 +70,10 @@ def size_design(spec: dict[str, Any]) -> dict[str, Any]:
         "network": result.network,
         "space": result.space,
         "bom": [li.model_dump() for li in result.bom],
+        # 어떤 블록으로 산정했는지(selections)와 바꿀 수 있는 후보(candidates).
+        # 호출한 에이전트가 장비를 지어내지 않고 이 목록 안에서만 제안하도록.
+        "selections": result.selections,
+        "candidates": result.candidates,
         "compliance": {
             "tier": report.tier, "ok": report.ok,
             "summary": report.summary(), "findings": _findings(report),
@@ -171,7 +175,10 @@ TOOL_DOCS = {
         "IT부하, 냉각(유량/CDU/칠러), 전기(UPS/배터리/발전기/변압기/버스웨이/PDU), "
         "통신(leaf-spine/트랜시버), 공간(면적/바닥하중), BOM, 규격검증 결과를 돌려준다. "
         "사용자가 데이터센터 용량·장비 수량·면적을 물으면 이 툴을 호출하고, 반환된 수치를 "
-        "그대로 인용하라. 절대 직접 계산하거나 값을 추정하지 마라."),
+        "그대로 인용하라. 절대 직접 계산하거나 값을 추정하지 마라. "
+        "장비를 바꿔 보려면 spec 에 selections 를 넣어라(예: {\"ups\": \"ups_1250kva\"}). "
+        "쓸 수 있는 값은 응답의 candidates 에 역할별로 들어 있다 — 그 밖의 id 를 지어내지 마라. "
+        "응답의 selections 는 이번 산정에 실제로 쓰인 블록이다."),
     "check_compliance": (
         "설계안의 규격 적합성만 검증한다(산출물 파일은 만들지 않는다). Uptime Tier 이중화, "
         "이중화 실효성(단일 고장 후 잔여 용량), ASHRAE 수온·공기 등급, 프리쿨링 가능성, "

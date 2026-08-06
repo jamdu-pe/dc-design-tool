@@ -74,6 +74,9 @@ class Spec(BaseModel):
     ambient_design_c: float = 33.0
     climate: str = "KR"
     region: str = "generic"   # 규격 팩(rules/regions/*.yaml). 예: "KR" = KEC 기반
+    # 역할(subtype) → block_id. 비워 두면 카탈로그 첫 후보를 쓴다.
+    # 가능한 역할은 engine.sizing.SELECTABLE_ROLES 참고. 예: {"ups": "ups_1250kva"}
+    selections: dict[str, str] = Field(default_factory=dict)
 
 
 class LineItem(BaseModel):

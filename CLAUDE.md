@@ -39,6 +39,7 @@ AI 가속기(GPU/TPU/Trainium) 랙 기반 데이터센터 M&E 개념설계 자�
 | 전체 사이징 + 규격검증 | `engine.sizing.size(Spec, blocks=None, selections=None)` → `SizingResult` |
 | 역할별 장비 후보 조회 | `engine.catalog.list_candidates(type, subtype)` → `list[Block]` |
 | 역할에 쓸 블록 결정 | `engine.catalog.resolve(type, subtype, blocks, selections)` → `Block` |
+| spec+인자 선택 병합·검증 | `engine.sizing.merge_selections(spec, override)` → `dict` |
 | 칩→노드→랙 롤업·일관성 | `engine.compose.composed_power_kw / composed_accel_count / check_consistency` |
 | IT 부하·랙 수량 | `engine.it_load.size_it_load(spec, blocks)` |
 | 냉각 사이징 | `engine.cooling.size_cooling(...)` |
@@ -53,8 +54,10 @@ AI 가속기(GPU/TPU/Trainium) 랙 기반 데이터센터 M&E 개념설계 자�
 | 산출물 | `reports.bom_xlsx.write_bom` / `design_basis_docx.write_design_basis` / `diagram_mermaid.write_diagrams` |
 
 ## 장비 교체
-역할(subtype)마다 카탈로그 후보가 여러 개일 수 있다. `size(spec, selections={"ups": "..."})`
-로 역할별 블록을 지정하고, 지정하지 않은 역할은 **카탈로그 등재 순서상 첫 후보**를 쓴다.
+역할(subtype)마다 카탈로그 후보가 여러 개일 수 있다. 역할별 블록은 두 곳에서 지정한다 —
+`spec.yaml`의 `selections:`(설계안에 기록되는 선택, CLI·시나리오 스윕·MCP 공통)와
+`size(spec, selections=...)` 인자(화면에서 지금 바꾼 선택). 역할 단위로 인자가 이긴다.
+지정하지 않은 역할은 **카탈로그 등재 순서상 첫 후보**를 쓴다.
 따라서 `data/*.yaml` 안의 순서가 곧 기본 설계다 — 기존 블록 앞에 새 블록을 끼워 넣지 말 것.
 교체 가능한 역할은 `engine.sizing.SELECTABLE_ROLES` 에 정의한다. 장비를 바꿔도 수량·용량은
 반드시 `calc.*` 로 재산정한다(절대규칙 1). 결과의 `selections`(쓰인 블록)와

@@ -3,13 +3,13 @@
 최종 갱신: 2026-08-06
 
 ## 한 줄 요약
-엔진·카탈로그·산출물은 동작하며 테스트 320개가 통과한다. Streamlit 웹 UI에 사번
+엔진·카탈로그·산출물은 동작하며 테스트 333개가 통과한다. Streamlit 웹 UI에 사번
 로그인을 붙였고, GitHub(`jamdu-pe/dc-design-tool`, private)에 올렸다.
 **Streamlit Cloud 앱 생성은 아직 남았다.**
 
 ## 테스트
 ```
-pytest -q   → 320 passed
+pytest -q   → 333 passed
 ```
 | 영역 | 파일 | 비고 |
 |---|---|---|
@@ -23,6 +23,7 @@ pytest -q   → 320 passed
 | 해시 생성기 | `test_hash_password.py` (6) | 2026-08-06 추가 |
 | 설계 계수 출처 | `test_rule_factors.py` (11) | 2026-08-06 추가 |
 | 화면 장비 교체 | `test_app_equipment.py` (11) | 2026-08-06 추가 |
+| spec/CLI/스윕 장비 교체 | `test_spec_selections.py` (13) | 2026-08-06 추가 |
 
 ## 최근 작업 (2026-08-06)
 
@@ -74,7 +75,31 @@ pytest -q   → 320 passed
 - `기본 장비로 되돌리기` 버튼(on_click 콜백으로 위젯 키 삭제).
 - 산출물 임시 폴더를 세션당 하나로 재사용한다(재실행마다 새로 만들면 조작 횟수만큼 쌓인다).
 
-### 5. Streamlit Cloud 배포 준비
+### 5. selections 를 Spec 필드로 승격
+장비 교체가 화면에서만 되던 것을 `spec.yaml`·CLI·시나리오 스윕·MCP 로 넓혔다.
+
+```yaml
+# spec.yaml
+selections:
+  ups: ups_schneider_galaxy_vx_500kva
+  cdu: cdu_coolit_chx1000
+```
+```yaml
+# 스윕 파일 — 장비도 비교 축이 된다
+sweep:
+  selections:
+    - {ups: ups_1250kva}
+    - {ups: ups_vertiv_exl_s1_800kva}
+```
+
+- `sizing.merge_selections(spec, override)` — spec 위에 인자를 얹는다(역할 단위로
+  인자 우선). 교체 불가 역할 키(오타)는 가능한 목록과 함께 ValueError.
+- `dc-design build` 가 기본값과 다른 선택을 한 줄로 밝힌다(기본값뿐이면 침묵).
+- 비교표 시나리오명은 dict 를 그대로 찍지 않고 `ups=<block_id>` 로 줄인다.
+- MCP `size_design` 응답에 `selections`·`candidates` 를 실어, 호출한 에이전트가
+  후보 밖의 장비를 지어내지 않도록 했다.
+
+### 6. Streamlit Cloud 배포 준비
 - `requirements.txt`(루트), `.streamlit/secrets.toml.example`, `.gitignore` 갱신.
 - `dc_design_tool/ui_auth.py` — 사번+비밀번호 로그인. 자격증명은 `st.secrets`에서만
   읽고, **설정이 없으면 화면을 열지 않는다(fail closed)**.
@@ -116,8 +141,6 @@ pytest -q   → 320 passed
 - **YAML 순서가 기본 설계를 결정한다.** `selections` 미지정 시 해당 subtype의 첫 블록을
   쓴다. `data/*.yaml`에서 기존 블록 **앞에** 새 블록을 끼워 넣으면 모든 결과가 조용히
   바뀐다. 세 파일 상단에 경고 주석이 있으나 코드가 막지는 않는다.
-- `selections`는 `size()` 인자로만 받는다. `spec.yaml`·CLI·`scenario.run_sweep`에서는
-  장비를 바꿀 수 없다(장비 축 스윕 비교 불가). 필요해지면 `Spec` 필드로 승격.
 - `capex_usd`를 가진 블록이 0개라 `scenario`의 CAPEX 비교가 항상 "비용 미상"이다.
   공개 데이터시트에 단가가 없어 견적 등 별도 경로로만 채울 수 있다.
 - `rdhx_60kw`(rear_door_hx)는 카탈로그에만 있고 어떤 엔진도 소비하지 않는다.
@@ -127,6 +150,6 @@ pytest -q   → 320 passed
   (규격검증 메시지의 em-dash). `python -X utf8` 로는 정상. 기존 이슈.
 
 ### 다음 후보
-1. Streamlit Cloud 앱 생성 → Secrets → 뷰어 초대
-2. `selections`를 `Spec` 필드로 승격 (CLI·시나리오 스윕에서도 장비 교체)
-3. `rdhx_60kw` 를 냉각 엔진에 연결하거나 카탈로그에서 제거
+1. Streamlit Cloud 앱 생성 → Secrets → 뷰어 초대 (브라우저 작업)
+2. `rdhx_60kw` 를 냉각 엔진에 연결하거나 카탈로그에서 제거
+3. 사이드바 기본 랙을 대표 모델(GB200)로 지정

@@ -41,9 +41,20 @@ def expand(base: dict, sweep: dict[str, list]) -> list[tuple[str, Spec]]:
     rows = []
     for combo in itertools.product(*(sweep[k] for k in keys)):
         overrides = dict(zip(keys, combo))
-        name = ", ".join(f"{k}={v}" for k, v in overrides.items())
+        name = ", ".join(_axis_label(k, v) for k, v in overrides.items())
         rows.append((name, Spec(**{**base, **overrides})))
     return rows
+
+
+def _axis_label(key: str, value: Any) -> str:
+    """비교표에 실을 축 표기.
+
+    장비 축(selections)은 dict 라 그대로 찍으면 중괄호·따옴표로 표가 읽히지 않는다.
+    역할=블록 쌍만 남긴다.
+    """
+    if isinstance(value, dict):
+        return ", ".join(f"{role}={block}" for role, block in value.items()) or key
+    return f"{key}={value}"
 
 
 def size_scenario(base: dict, blocks: Optional[dict[str, Block]] = None) -> SizingResult:

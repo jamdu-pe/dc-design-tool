@@ -37,6 +37,25 @@ def _capacity_label(block: Block) -> str:
     return "-"
 
 
+def merge_selections(spec: Spec,
+                     override: Optional[dict[str, str]] = None) -> dict[str, str]:
+    """spec 에 적힌 장비 선택 위에 호출부 선택을 얹는다.
+
+    spec 은 '설계안에 기록된 선택'(spec.yaml·시나리오 스윕), override 는 '지금 화면에서
+    바꾼 선택'이다. 역할 단위로 override 가 이긴다.
+
+    Raises:
+        ValueError: 교체 가능한 역할이 아닌 키가 섞여 있을 때(오타를 조용히 삼키지 않는다).
+    """
+    merged = {**(spec.selections or {}), **(override or {})}
+    unknown = sorted(set(merged) - set(SELECTABLE_ROLES))
+    if unknown:
+        raise ValueError(
+            f"교체 가능한 역할이 아니다: {', '.join(unknown)} — "
+            f"가능: {', '.join(sorted(SELECTABLE_ROLES))}")
+    return merged
+
+
 def _candidate_table(blocks: dict[str, Block],
                      selections: dict[str, str]) -> dict[str, list[dict]]:
     """역할별 후보 목록(UI 드롭다운용). 카탈로그 등재 순서를 그대로 쓴다."""
@@ -61,18 +80,19 @@ def size(spec: Spec, blocks: Optional[dict] = None,
     Args:
         spec: 요구사항.
         blocks: 카탈로그 주입(미지정 시 `data/*.yaml` 로드). 시나리오 비교·테스트용.
-        selections: 역할(subtype) → block_id. 지정한 역할은 그 블록을, 나머지는
-            카탈로그 첫 후보를 쓴다. 장비를 바꿔도 수량·용량은 각 도메인 엔진이
-            `calc.*` 로 재산정한다(CLAUDE.md 절대규칙 1). 가능한 역할은
-            `SELECTABLE_ROLES` 참고.
+        selections: 역할(subtype) → block_id. `spec.selections` 위에 얹히며 역할
+            단위로 이쪽이 이긴다. 지정하지 않은 역할은 카탈로그 첫 후보를 쓴다.
+            장비를 바꿔도 수량·용량은 각 도메인 엔진이 `calc.*` 로 재산정한다
+            (CLAUDE.md 절대규칙 1). 가능한 역할은 `SELECTABLE_ROLES` 참고.
 
     Raises:
-        KeyError: 카탈로그·규칙에 없는 랙/장비/등급을 참조하거나, `selections`
-            의 block_id 가 없거나 그 역할의 후보가 아닐 때.
-        ValueError: 목표(it_power_mw/rack_count) 미지정 등 입력 오류.
+        KeyError: 카탈로그·규칙에 없는 랙/장비/등급을 참조하거나, 선택한 block_id
+            가 없거나 그 역할의 후보가 아닐 때.
+        ValueError: 목표(it_power_mw/rack_count) 미지정, 교체 불가 역할 키 등 입력 오류.
     """
     blocks = blocks if blocks is not None else load_blocks()
     rack = get_block(blocks, spec.rack_id)
+    selections = merge_selections(spec, selections)
 
     assumptions: list[str] = []
     warnings: list[str] = []
