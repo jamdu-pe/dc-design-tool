@@ -3,13 +3,13 @@
 최종 갱신: 2026-08-06
 
 ## 한 줄 요약
-엔진·카탈로그·산출물은 동작하며 테스트 309개가 통과한다. Streamlit 웹 UI에 사번
+엔진·카탈로그·산출물은 동작하며 테스트 320개가 통과한다. Streamlit 웹 UI에 사번
 로그인을 붙였고, GitHub(`jamdu-pe/dc-design-tool`, private)에 올렸다.
 **Streamlit Cloud 앱 생성은 아직 남았다.**
 
 ## 테스트
 ```
-pytest -q   → 309 passed
+pytest -q   → 320 passed
 ```
 | 영역 | 파일 | 비고 |
 |---|---|---|
@@ -22,6 +22,7 @@ pytest -q   → 309 passed
 | 로그인 게이트 | `test_auth.py` (11) | 2026-08-06 추가 |
 | 해시 생성기 | `test_hash_password.py` (6) | 2026-08-06 추가 |
 | 설계 계수 출처 | `test_rule_factors.py` (11) | 2026-08-06 추가 |
+| 화면 장비 교체 | `test_app_equipment.py` (11) | 2026-08-06 추가 |
 
 ## 최근 작업 (2026-08-06)
 
@@ -63,7 +64,17 @@ pytest -q   → 309 passed
 `electrical` 결과에 `power_factor`·`house_load_ratio`·`distribution_loss_ratio` 를
 실어 어떤 계수가 쓰였는지 결과만 봐도 알 수 있게 했다.
 
-### 4. Streamlit Cloud 배포 준비
+### 4. 화면에서 장비 교체 (app.py)
+결과 상단 `장비 교체` 확장 패널에 역할 11종 드롭다운을 붙였다. 후보 목록·기본값
+판정은 `result.candidates` 를 그대로 쓰고, 고른 값은 `size(spec, selections=...)`
+로 엔진에 넘긴다. **화면은 여전히 계산하지 않는다.**
+
+- 흐름을 바꿨다: 버튼 클릭 시 결과가 아니라 **조건(spec)** 을 저장하고, 결과는 매
+  실행마다 현재 선택으로 다시 만든다. 드롭다운을 바꾸면 표·BOM·규격검증이 함께 갱신된다.
+- `기본 장비로 되돌리기` 버튼(on_click 콜백으로 위젯 키 삭제).
+- 산출물 임시 폴더를 세션당 하나로 재사용한다(재실행마다 새로 만들면 조작 횟수만큼 쌓인다).
+
+### 5. Streamlit Cloud 배포 준비
 - `requirements.txt`(루트), `.streamlit/secrets.toml.example`, `.gitignore` 갱신.
 - `dc_design_tool/ui_auth.py` — 사번+비밀번호 로그인. 자격증명은 `st.secrets`에서만
   읽고, **설정이 없으면 화면을 열지 않는다(fail closed)**.
@@ -110,10 +121,12 @@ pytest -q   → 309 passed
 - `capex_usd`를 가진 블록이 0개라 `scenario`의 CAPEX 비교가 항상 "비용 미상"이다.
   공개 데이터시트에 단가가 없어 견적 등 별도 경로로만 채울 수 있다.
 - `rdhx_60kw`(rear_door_hx)는 카탈로그에만 있고 어떤 엔진도 소비하지 않는다.
+- **사이드바 기본 랙은 목록 정렬상 첫 항목(`aws_trainium3_ultraserver_rack`)이다.**
+  대표 모델(GB200)이 아니므로 첫 화면 수치가 의외로 보일 수 있다.
 - Windows 기본 콘솔(cp949)에서 CLI 출력이 `UnicodeEncodeError`로 깨진다
   (규격검증 메시지의 em-dash). `python -X utf8` 로는 정상. 기존 이슈.
 
 ### 다음 후보
-1. `app.py`에 장비 교체 드롭다운 연결 (`candidates` 데이터는 이미 나온다)
-2. Streamlit Cloud 앱 생성 → Secrets → 뷰어 초대
-3. `selections`를 `Spec` 필드로 승격 (CLI·시나리오 스윕에서도 장비 교체)
+1. Streamlit Cloud 앱 생성 → Secrets → 뷰어 초대
+2. `selections`를 `Spec` 필드로 승격 (CLI·시나리오 스윕에서도 장비 교체)
+3. `rdhx_60kw` 를 냉각 엔진에 연결하거나 카탈로그에서 제거

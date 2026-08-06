@@ -20,7 +20,7 @@ from pydantic import ValidationError
 from dc_design_tool.engine.catalog import (append_user_block, available_regions,
                                            load_blocks, load_region, load_rule)
 from dc_design_tool.engine.models import Spec
-from dc_design_tool.engine.sizing import size
+from dc_design_tool.engine.sizing import SELECTABLE_ROLES, size
 from dc_design_tool.reports.bom_xlsx import write_bom
 from dc_design_tool.reports.design_basis_docx import write_design_basis
 from dc_design_tool.ui_auth import require_login
@@ -82,6 +82,42 @@ SPACE_LABELS = {
 }
 SEVERITY_LABEL = {"violation": "위반", "warning": "경고", "info": "정보"}
 SEVERITY_ORDER = {"violation": 0, "warning": 1, "info": 2}
+
+# 장비 교체 드롭다운의 배치. 역할 키는 engine.sizing.SELECTABLE_ROLES 와 같아야 한다.
+EQUIPMENT_GROUPS = [
+    ("기계", [("cdu", "CDU"), ("chiller", "칠러")]),
+    ("전기", [("ups", "UPS"), ("battery", "배터리"), ("generator", "발전기"),
+              ("transformer", "변압기"), ("pdu", "랙 PDU"), ("busway", "버스웨이")]),
+    ("통신", [("leaf", "Leaf 스위치"), ("spine", "Spine 스위치"),
+              ("transceiver", "트랜시버")]),
+]
+EQUIPMENT_KEY = "sel_%s"        # 역할별 위젯 키
+
+
+def _selected_equipment() -> dict[str, str]:
+    """사용자가 고른 역할별 블록. 안 고른 역할은 빼서 엔진 기본값(첫 후보)에 맡긴다."""
+    picked = {}
+    for role in SELECTABLE_ROLES:
+        value = st.session_state.get(EQUIPMENT_KEY % role)
+        if value:
+            picked[role] = value
+    return picked
+
+
+def _reset_equipment() -> None:
+    """위젯 키를 지워 모든 역할을 카탈로그 기본값으로 되돌린다.
+
+    on_click 콜백은 스크립트 재실행 **전에** 돌므로, 위젯이 다시 만들어질 때
+    session_state 가 비어 있어 기본값(첫 후보)이 잡힌다.
+    """
+    for role in SELECTABLE_ROLES:
+        st.session_state.pop(EQUIPMENT_KEY % role, None)
+
+
+def _candidate_label(candidate: dict) -> str:
+    mark = " · 기본" if candidate["is_default"] else ""
+    return (f"{candidate['vendor']} {candidate['model']} · "
+            f"{candidate['capacity']} [{candidate['confidence']}]{mark}")
 
 
 # ---------------------------------------------------------------- 데이터 로드
@@ -147,18 +183,27 @@ target_pue = st.sidebar.number_input("목표 PUE", 1.0, 3.0, 1.25, 0.01)
 ambient = st.sidebar.number_input("설계 외기 (°C)", -20.0, 55.0, 33.0, 0.5)
 
 if st.sidebar.button("설계 실행", type="primary", use_container_width=True):
+    # 결과가 아니라 '조건'을 저장한다. 결과는 매 실행마다 현재 장비 선택으로 다시 만든다
+    # — 그래야 드롭다운을 바꿨을 때 표·BOM·규격검증이 함께 갱신된다.
     try:
-        spec = Spec(project=project, rack_id=rack_id, it_power_mw=it_power_mw,
-                    rack_count=rack_count, tier=tier, electrical_redundancy=e_red,
-                    mechanical_redundancy=m_red, chw_delta_t_k=delta_t,
-                    target_pue=target_pue, ambient_design_c=ambient, region=region)
-        st.session_state["result"] = size(spec)
+        st.session_state["spec"] = Spec(
+            project=project, rack_id=rack_id, it_power_mw=it_power_mw,
+            rack_count=rack_count, tier=tier, electrical_redundancy=e_red,
+            mechanical_redundancy=m_red, chw_delta_t_k=delta_t,
+            target_pue=target_pue, ambient_design_c=ambient, region=region)
         st.session_state["error"] = None
     except ValidationError as exc:
-        st.session_state["result"] = None
+        st.session_state["spec"] = None
         st.session_state["error"] = f"입력 검증 실패:\n\n{exc}"
+
+# ---------------------------------------------------------------- 사이징
+result = None
+spec = st.session_state.get("spec")
+if spec is not None:
+    try:
+        result = size(spec, selections=_selected_equipment())
+        st.session_state["error"] = None
     except (KeyError, ValueError) as exc:
-        st.session_state["result"] = None
         st.session_state["error"] = str(exc).strip("'")
 
 # ---------------------------------------------------------------- 본문
@@ -168,8 +213,6 @@ st.caption("모든 수치는 결정론적 엔진(`dc_design_tool.engine`)이 산
 
 if st.session_state.get("error"):
     st.error(st.session_state["error"])
-
-result = st.session_state.get("result")
 
 if result is None:
     st.info("왼쪽에서 조건을 고르고 **설계 실행**을 누르세요. "
@@ -184,6 +227,26 @@ else:
     m2.metric("총 IT부하", f"{result.it_power_kw:,.1f} kW")
     m3.metric("PUE (추정)", result.electrical["pue_estimate"])
     m4.metric("총 건축면적", f"{result.space['total_building_m2']:,.1f} m²")
+
+    # ------------------------------------------------------------ 장비 교체
+    # 후보 목록·기본값 판정은 engine 이 준 result.candidates 를 그대로 쓴다.
+    # 여기서 고른 값은 다음 실행의 size(spec, selections=...) 로 들어간다.
+    with st.expander("장비 교체 — 역할별 후보 선택", expanded=False):
+        st.caption("바꾸면 수량·용량·면적·규격검증이 엔진에서 다시 계산된다. "
+                   "`기본`은 카탈로그 등재 순서상 첫 후보다.")
+        st.button("기본 장비로 되돌리기", on_click=_reset_equipment)
+
+        for domain, roles in EQUIPMENT_GROUPS:
+            st.markdown(f"**{domain}**")
+            for col, (role, label) in zip(st.columns(len(roles)), roles):
+                options = [c["id"] for c in result.candidates.get(role, [])]
+                labels = {c["id"]: _candidate_label(c)
+                          for c in result.candidates.get(role, [])}
+                if not options:
+                    col.selectbox(label, ["(후보 없음)"], disabled=True)
+                    continue
+                col.selectbox(label, options, key=EQUIPMENT_KEY % role,
+                              format_func=lambda block_id, m=labels: m[block_id])
 
     tab_m, tab_e, tab_n, tab_s, tab_c, tab_bom = st.tabs(
         ["기계", "전기", "통신", "공간", "규격검증", "BOM"])
@@ -227,7 +290,11 @@ else:
 
     # ------------------------------------------------------------ 산출물 다운로드
     st.subheader("산출물")
-    out_dir = tempfile.mkdtemp(prefix="dc_design_")  # 실행마다 분리(파일명이 고정)
+    # 세션당 폴더 하나를 재사용한다. 장비 드롭다운을 만질 때마다 스크립트가 재실행되므로
+    # 매번 새 임시 폴더를 만들면 조작 횟수만큼 쌓인다(파일명은 고정이라 덮어써도 무방).
+    if "out_dir" not in st.session_state:
+        st.session_state["out_dir"] = tempfile.mkdtemp(prefix="dc_design_")
+    out_dir = st.session_state["out_dir"]
     try:
         xlsx_path = write_bom(result, out_dir)
         docx_path = write_design_basis(result, out_dir)
