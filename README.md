@@ -199,8 +199,10 @@ Cloud 공유 설정만으로는 초대 목록 관리가 이메일 단위라 사�
 ## 확장 방법 (코드 수정 없음)
 - 신규 장비: `dc_design_tool/data/*.yaml`에 블록 추가(`as_of_date`·`confidence`·`source_url` 필수).
 - 설계 계수: `dc_design_tool/rules/*.yaml` 수정
-  (`redundancy` 이중화, `electrical` 고조파·자립시간·버스웨이 표준, `ashrae` 수온·공기등급,
+  (`redundancy` 이중화, `electrical` 역률·하우스부하·배전손실·고조파·자립시간·버스웨이 표준,
+   `cooling` 냉각소비전력 계수, `ashrae` 수온·공기등급,
    `space` 통로계수·허용 바닥하중, `network` 오버섭스크립션·예비율, `tiers` Tier 요건).
+  코드에는 설계 계수를 두지 않는다 — 엔진은 전부 `load_rule()` 로 읽는다.
 
 ## 남은 단계
 카탈로그 단가(`capex_usd`) 확보 시 CAPEX 비교 활성화, 규격 팩 확장(지역 추가는 yaml 1개).

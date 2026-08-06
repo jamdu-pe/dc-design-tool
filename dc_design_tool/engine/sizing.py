@@ -9,11 +9,8 @@ from typing import Optional
 
 from . import (compliance, cooling as cooling_engine, it_load,
                network as network_engine, power, space as space_engine)
-from .catalog import get_block, list_candidates, load_blocks
+from .catalog import get_block, list_candidates, load_blocks, load_rule
 from .models import Block, SizingResult, Spec
-
-# 냉각 소비전력 개략 계수(IT 부하 대비). 상세는 기계 엔진 고도화 시 대체.
-COOLING_POWER_RATIO = 0.35
 
 # 교체 가능한 역할(subtype) → 블록 종류(type).
 # 이 표가 "설계에서 바꿀 수 있는 장비 축"의 정의다. 도메인 엔진이 실제로 소비하는
@@ -94,7 +91,9 @@ def size(spec: Spec, blocks: Optional[dict] = None,
     bom += c_bom
 
     # ---- 3) 전기 ----
-    cooling_kw = it_kw * COOLING_POWER_RATIO
+    # 냉각 소비전력 계수는 rules/cooling.yaml 에서 읽는다(하드코딩 금지).
+    cooling_ratio = load_rule("cooling.yaml", spec.region)["cooling_power_ratio"]
+    cooling_kw = it_kw * cooling_ratio
     electrical, e_bom = power.size_electrical(
         it_kw, cooling_kw, n_rack, rack_kw, spec, blocks, selections=selections)
     bom += e_bom
@@ -115,7 +114,7 @@ def size(spec: Spec, blocks: Optional[dict] = None,
         f"랙 정격 {rack_kw}kW({load['power_source']}) 기준, "
         f"액냉비율 {cooling['liquid_fraction']}, 가속기 {load['accel_total']}개",
         f"냉각수 ΔT {spec.chw_delta_t_k}K, "
-        f"냉각소비전력 IT의 {int(COOLING_POWER_RATIO * 100)}% 가정",
+        f"냉각소비전력 IT의 {int(cooling_ratio * 100)}% 가정(rules/cooling.yaml)",
         "본 산출물은 개념설계/타당성 수준. 실시설계·인허가는 면허기술자 검토 필요.",
     ]
 

@@ -11,10 +11,15 @@ harmonic:
   thd_i_assumed: 0.10       # 비선형 부하 전류 THD 가정
   transformer_factor: 1.10  # 변압기 고조파 여유(K-factor 대체 개략)
   generator_factor: 1.25    # 발전기 비선형/스텝부하 여유
+generator:
+  start_margin: 0.15        # 발전기 기동(스텝부하) 여유 — engine.calc.generator_kw
 demand:
   demand_factor: 0.9        # 수용률
   design_margin: 0.15       # 설계 여유
+  house_load_ratio: 0.10    # IT 부하 대비 하우스 부하(조명·공조·제어반 등)
+  distribution_loss_ratio: 0.08  # IT 부하 대비 배전 손실(UPS·변압기·케이블) — PUE 산정용
 distribution:
+  power_factor: 0.95        # 설계 역률(전류·kVA 환산 기준)
   rack_voltage_v: 415       # 랙 급전 전압(3상)
   primary_kv: 22.9          # 수전 전압(국내 특고압 예)
   feeds_per_rack:           # 랙당 급전 경로 수(각 경로가 랙 전부하를 담당)

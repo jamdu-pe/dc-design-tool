@@ -3,13 +3,13 @@
 최종 갱신: 2026-08-06
 
 ## 한 줄 요약
-엔진·카탈로그·산출물은 동작하며 테스트 298개가 통과한다. Streamlit 웹 UI에 사번
+엔진·카탈로그·산출물은 동작하며 테스트 309개가 통과한다. Streamlit 웹 UI에 사번
 로그인을 붙였고, GitHub(`jamdu-pe/dc-design-tool`, private)에 올렸다.
 **Streamlit Cloud 앱 생성은 아직 남았다.**
 
 ## 테스트
 ```
-pytest -q   → 298 passed
+pytest -q   → 309 passed
 ```
 | 영역 | 파일 | 비고 |
 |---|---|---|
@@ -21,6 +21,7 @@ pytest -q   → 298 passed
 | 웹 UI | `test_app.py` (12) | 로그인을 거쳐 검증 |
 | 로그인 게이트 | `test_auth.py` (11) | 2026-08-06 추가 |
 | 해시 생성기 | `test_hash_password.py` (6) | 2026-08-06 추가 |
+| 설계 계수 출처 | `test_rule_factors.py` (11) | 2026-08-06 추가 |
 
 ## 최근 작업 (2026-08-06)
 
@@ -47,7 +48,22 @@ pytest -q   → 298 passed
 - `SizingResult.selections` / `.candidates` 추가(UI 드롭다운용).
 - 교체해도 수량·용량은 기존 `calc.*` 로 재산정한다(절대규칙 1 유지).
 
-### 3. Streamlit Cloud 배포 준비
+### 3. 설계 계수를 rules/*.yaml 로 이관 (절대규칙 6)
+코드에 박혀 있던 계수를 전부 규칙 파일로 옮겼다. **수치 변화 없음**(골든테스트 통과).
+
+| 이전 위치 | 현재 |
+|---|---|
+| `sizing.COOLING_POWER_RATIO = 0.35` | `rules/cooling.yaml` `cooling_power_ratio` (신규 파일) |
+| `power.py` `pf = 0.95` | `electrical.yaml` `distribution.power_factor` |
+| `power.py` `it_kw * 0.10` | `electrical.yaml` `demand.house_load_ratio` |
+| `power.py` `it_kw * 0.08` | `electrical.yaml` `demand.distribution_loss_ratio` |
+| `calc.generator_kw` 기본인자 `0.15` | `electrical.yaml` `generator.start_margin` |
+
+지역 규격 팩(`rules/regions/*.yaml`)의 `overrides` 로도 교체할 수 있다.
+`electrical` 결과에 `power_factor`·`house_load_ratio`·`distribution_loss_ratio` 를
+실어 어떤 계수가 쓰였는지 결과만 봐도 알 수 있게 했다.
+
+### 4. Streamlit Cloud 배포 준비
 - `requirements.txt`(루트), `.streamlit/secrets.toml.example`, `.gitignore` 갱신.
 - `dc_design_tool/ui_auth.py` — 사번+비밀번호 로그인. 자격증명은 `st.secrets`에서만
   읽고, **설정이 없으면 화면을 열지 않는다(fail closed)**.
@@ -89,9 +105,6 @@ pytest -q   → 298 passed
 - **YAML 순서가 기본 설계를 결정한다.** `selections` 미지정 시 해당 subtype의 첫 블록을
   쓴다. `data/*.yaml`에서 기존 블록 **앞에** 새 블록을 끼워 넣으면 모든 결과가 조용히
   바뀐다. 세 파일 상단에 경고 주석이 있으나 코드가 막지는 않는다.
-- **하드코딩 설계 계수 4건이 CLAUDE.md 절대규칙 6 위반 상태다.**
-  `sizing.py:16` `COOLING_POWER_RATIO=0.35`, `power.py` `pf=0.95`·하우스부하 `0.10`·
-  PUE 손실 `0.08`. `rules/*.yaml`로 옮겨야 한다(수치 변화 없음).
 - `selections`는 `size()` 인자로만 받는다. `spec.yaml`·CLI·`scenario.run_sweep`에서는
   장비를 바꿀 수 없다(장비 축 스윕 비교 불가). 필요해지면 `Spec` 필드로 승격.
 - `capex_usd`를 가진 블록이 0개라 `scenario`의 CAPEX 비교가 항상 "비용 미상"이다.
@@ -101,6 +114,6 @@ pytest -q   → 298 passed
   (규격검증 메시지의 em-dash). `python -X utf8` 로는 정상. 기존 이슈.
 
 ### 다음 후보
-1. 하드코딩 계수 `rules/*.yaml` 이관 (작고 독립적, 절대규칙 위반 해소)
-2. `app.py`에 장비 교체 드롭다운 연결 (`candidates` 데이터는 이미 나온다)
-3. GitHub push → Cloud 배포 실행
+1. `app.py`에 장비 교체 드롭다운 연결 (`candidates` 데이터는 이미 나온다)
+2. Streamlit Cloud 앱 생성 → Secrets → 뷰어 초대
+3. `selections`를 `Spec` 필드로 승격 (CLI·시나리오 스윕에서도 장비 교체)

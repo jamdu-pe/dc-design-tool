@@ -69,7 +69,8 @@ def test_transformer_capacity_includes_harmonic_margin():
     e = _elec()
     harm = load_rule("electrical.yaml")["harmonic"]
     margin = load_rule("electrical.yaml")["demand"]["design_margin"]
-    plain_kva = e["facility_kw"] / 0.95
+    pf = load_rule("electrical.yaml")["distribution"]["power_factor"]
+    plain_kva = e["facility_kw"] / pf
     assert e["transformer_need_kva"] == pytest.approx(
         plain_kva * harm["transformer_factor"] * (1 + margin), rel=0.01)
 
@@ -77,7 +78,11 @@ def test_transformer_capacity_includes_harmonic_margin():
 def test_generator_capacity_includes_step_load_margin():
     e = _elec()
     harm = load_rule("electrical.yaml")["harmonic"]
-    plain_kw = calc.generator_kw(5040.0, 5040.0 * 0.35)
+    dem = load_rule("electrical.yaml")["demand"]
+    cooling_ratio = load_rule("cooling.yaml")["cooling_power_ratio"]
+    plain_kw = calc.generator_kw(5040.0, 5040.0 * cooling_ratio,
+                                 dem["house_load_ratio"],
+                                 load_rule("electrical.yaml")["generator"]["start_margin"])
     assert e["generator_need_kw"] == pytest.approx(
         plain_kw * harm["generator_factor"], rel=0.01)
 
@@ -91,8 +96,9 @@ def test_mv_current_is_based_on_facility_demand_not_installed_redundancy():
     """
     n, two_n = _elec("N"), _elec("2N")
     margin = load_rule("electrical.yaml")["demand"]["design_margin"]
+    pf = load_rule("electrical.yaml")["distribution"]["power_factor"]
     expected = calc.line_current_a(n["facility_kw"] * (1 + margin),
-                                   n["primary_kv"] * 1000, 0.95)
+                                   n["primary_kv"] * 1000, pf)
     assert n["mv_current_a"] == pytest.approx(expected, rel=0.01)
     assert two_n["mv_current_a"] == pytest.approx(n["mv_current_a"], rel=0.01)
 
