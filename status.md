@@ -153,3 +153,23 @@ sweep:
 1. Streamlit Cloud 앱 생성 → Secrets → 뷰어 초대 (브라우저 작업)
 2. `rdhx_60kw` 를 냉각 엔진에 연결하거나 카탈로그에서 제거
 3. 사이드바 기본 랙을 대표 모델(GB200)로 지정
+
+## 다음 세션 시작점
+
+코드 쪽은 일단락됐다. `main` 이 원격과 같고 `pytest -q` 는 333개 통과한다.
+
+**남은 것은 배포뿐이며 전부 브라우저 작업이다.** 절차는 README "Streamlit Community
+Cloud 배포" 절에 단계별로 있다. 요약:
+
+1. 터미널에서 값 두 개를 만든다
+   - 쿠키 키: `python -c "import secrets; print(secrets.token_urlsafe(48))"`
+   - 사용자별 해시: `python scripts/hash_password.py` (사번마다 1회)
+2. <https://share.streamlit.io> → New app → `jamdu-pe/dc-design-tool` / `main` / `app.py`
+3. Deploy 전에 Advanced settings → Secrets 에 `[auth.cookie]` + `[auth.credentials…]` 붙여넣기
+4. Settings → Sharing → "Only specific people can view this app" → 사내 이메일 초대
+5. 확인: 로그인 화면이 먼저 뜨는가 / 틀린 비밀번호가 막히는가 / 로그인 후 `설계 실행`
+   과 `장비 교체` 드롭다운이 동작하는가
+
+Secrets 를 빠뜨려도 설계 화면이 공개되지는 않는다(안내만 띄우고 멈춘다).
+
+코드 작업을 다시 잡는다면 위 "다음 후보" 2·3번이 가장 작고 독립적이다.
