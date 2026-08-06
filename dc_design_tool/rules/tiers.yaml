@@ -1,0 +1,6 @@
+# Uptime Tier / TIA-942 개략 매핑(개념설계용)
+tiers:
+  I:   {electrical_min: "N",   mechanical_min: "N",   concurrently_maintainable: false, fault_tolerant: false}
+  II:  {electrical_min: "N+1", mechanical_min: "N+1", concurrently_maintainable: false, fault_tolerant: false}
+  III: {electrical_min: "N+1", mechanical_min: "N+1", concurrently_maintainable: true,  fault_tolerant: false}
+  IV:  {electrical_min: "2N",  mechanical_min: "N+2", concurrently_maintainable: true,  fault_tolerant: true}

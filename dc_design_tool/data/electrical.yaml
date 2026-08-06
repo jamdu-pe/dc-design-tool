@@ -1,0 +1,171 @@
+# 전기 장비 카탈로그 (type=electrical)
+#
+# [순서 주의] engine 이 아직 `_first()`(해당 subtype 의 첫 블록)로 장비를 고른다.
+# 각 subtype 의 기존 기본 블록을 맨 앞에 두고 신규 후보는 뒤에 붙일 것.
+# 순서를 바꾸면 모든 설계 결과가 조용히 바뀐다. (선정 엔진 도입 시 이 제약은 사라진다)
+#
+# [footprint_m2 주의] 신규 벤더 블록의 정격은 데이터시트 확인값이지만, footprint_m2 는
+# 치수를 확인하지 못해 동급 장비 통상값으로 넣었다. 전기실 면적 산정에 직접 영향을 준다.
+- id: ups_1250kva
+  type: electrical
+  subtype: ups
+  vendor: Generic
+  model: UPS-1250
+  interface:
+    capacity_kva: 1250
+    power_factor: 0.95
+    efficiency: 0.97
+    footprint_m2: 3.0
+  as_of_date: "2025-06"
+  confidence: vendor
+  source_url: "generic-industry-typical"
+
+- id: genset_2500kw
+  type: electrical
+  subtype: generator
+  vendor: Generic
+  model: GEN-2500
+  interface:
+    capacity_kw: 2500
+    footprint_m2: 25
+    location: yard          # 옥외 발전기동/야드 — 전기실 면적에 포함하지 않음
+  as_of_date: "2025-06"
+  confidence: vendor
+  source_url: "generic-industry-typical"
+
+- id: tx_2500kva
+  type: electrical
+  subtype: transformer
+  vendor: Generic
+  model: TX-2500
+  interface:
+    capacity_kva: 2500
+    primary_kv: 22.9
+    secondary_v: 380
+    footprint_m2: 8
+  as_of_date: "2025-06"
+  confidence: vendor
+  source_url: "generic-industry-typical"
+
+- id: battery_cabinet_200kwh
+  type: electrical
+  subtype: battery
+  vendor: Generic
+  model: LiB-200kWh
+  interface:
+    capacity_kwh: 200
+    footprint_m2: 2.0
+  as_of_date: "2025-06"
+  confidence: vendor
+  source_url: "generic-industry-typical"
+
+- id: pdu_rack_50kw
+  type: electrical
+  subtype: pdu
+  vendor: Generic
+  model: rPDU-50kW-3P
+  interface:
+    capacity_kw: 50
+    rating_a: 80
+    footprint_m2: 0.0
+  as_of_date: "2025-06"
+  confidence: vendor
+  source_url: "generic-industry-typical"
+
+- id: busway_800a
+  type: electrical
+  subtype: busway
+  vendor: Generic
+  model: Busway-800A
+  interface:
+    rating_a: 800
+    footprint_m2: 0.0
+  as_of_date: "2025-06"
+  confidence: vendor
+  source_url: "generic-industry-typical"
+
+# ---------------------------------------------------------------------------
+# 교체용 후보 (신규). 위 기본 블록보다 뒤에 둘 것 — 파일 상단 [순서 주의] 참고.
+# ---------------------------------------------------------------------------
+
+- id: ups_vertiv_exl_s1_800kva
+  type: electrical
+  subtype: ups
+  vendor: Vertiv
+  model: Liebert EXL S1 800kVA
+  interface:
+    capacity_kva: 800          # 공개 정격 라인업(250~1200kVA) 중 800kVA (확인)
+    power_factor: 1.0          # kVA=kW 단일역률 제품군 (확인)
+    efficiency: 0.97           # 이중변환 모드 97% (확인). ECO/Dynamic Online 은 미적용
+    footprint_m2: 2.4          # 미확인 — 동급 통상값
+  as_of_date: "2026-08"
+  confidence: vendor
+  source_url: "https://www.vertiv.com/en-ca/products-catalog/critical-power/uninterruptible-power-supplies-ups/liebert-exl-s1/"
+
+- id: ups_schneider_galaxy_vx_500kva
+  type: electrical
+  subtype: ups
+  vendor: Schneider Electric
+  model: Galaxy VX 500kVA
+  interface:
+    capacity_kva: 500          # 단일 유닛 500~1500kVA 스케일러블 중 500kVA (확인)
+    power_factor: 1.0
+    # efficiency: 미확인 — 데이터시트 값을 확인하지 못해 기재하지 않는다.
+    #             models.Interface 기본값 0.97 이 적용된다.
+    footprint_m2: 1.9          # 미확인 — 동급 통상값
+  as_of_date: "2026-08"
+  confidence: vendor
+  source_url: "https://www.se.com/us/en/product/GVX500K500NHS/galaxy-vx-500kva-400v-start-up-5x8/"
+
+- id: genset_cat_3516c_2000kw
+  type: electrical
+  subtype: generator
+  vendor: Caterpillar
+  model: 3516C (2000 ekW Standby)
+  interface:
+    capacity_kw: 2000          # 60Hz 스탠바이 정격 (확인). 제품군 1825~2500 ekW
+    footprint_m2: 22           # 미확인 — 동급 통상값
+    location: yard
+  as_of_date: "2026-08"
+  confidence: vendor
+  source_url: "https://www.cat.com/en_US/products/new/power-systems/electric-power/diesel-generator-sets/1000028912.html"
+
+- id: genset_cat_c175_16_3000kw
+  type: electrical
+  subtype: generator
+  vendor: Caterpillar
+  model: C175-16 (3000 kW Standby)
+  interface:
+    capacity_kw: 3000          # 60Hz 스탠바이 정격 (확인). 제품군 2500~3365 ekW
+    footprint_m2: 30           # 미확인 — 동급 통상값
+    location: yard
+  as_of_date: "2026-08"
+  confidence: vendor
+  source_url: "https://www.cat.com/en_US/products/new/power-systems/electric-power/diesel-generator-sets/1000028916.html"
+
+- id: tx_ls_cast_resin_1500kva
+  type: electrical
+  subtype: transformer
+  vendor: LS Electric
+  model: Cast Resin TR 1500kVA
+  interface:
+    capacity_kva: 1500         # 공개 정격범위(50~15,000kVA) 내 표준 정격
+    primary_kv: 22.9           # 공개 1차전압 범위(2.3~36kV) 내 국내 특고압
+    secondary_v: 380           # 공개 2차전압 범위(120V~24kV) 내 국내 3상 저압
+    footprint_m2: 6            # 미확인 — 동급 통상값
+  as_of_date: "2026-08"
+  confidence: projected        # 제품군·정격범위는 확인, 해당 SKU 개별 사양은 미확인
+  source_url: "https://www.ls-electric.com/products/view/Smart_Power_Solution/Power_Distribution/Transformer/Cast_Resin_Transformer (정격범위 내 표준 조합)"
+
+- id: battery_vertiv_hpl_p1_51kwh
+  type: electrical
+  subtype: battery
+  vendor: Vertiv
+  model: HPL P1 Li-ion (51.2kWh)
+  interface:
+    capacity_kwh: 51.2         # 캐비닛당 51.2kWh / 210kW (확인)
+    chemistry: li_ion_nmc
+    footprint_m2: 0.9          # 미확인 — 동급 통상값
+  as_of_date: "2026-08"
+  confidence: vendor
+  source_url: "https://www.vertiv.com/en-emea/products-catalog/critical-power/uninterruptible-power-supplies-ups/vertiv-hpl-p1/"

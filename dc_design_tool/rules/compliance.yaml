@@ -1,0 +1,11 @@
+# 자동검증 임계값(설계 계수가 아니라 '검사 기준')
+catalog:
+  max_age_months: 36        # as_of_date 가 이보다 오래되면 사양 갱신 경고
+redundancy:
+  # 이중화 실효성: 단일 고장 후 잔여 용량이 필요 용량의 몇 배 이상이어야 하는가
+  min_surviving_ratio: 1.0
+area:
+  # 부속실 면적 대비 장비 점유율 상한(유지보수 통로 확보). 초과 시 위반.
+  max_equipment_utilization: 0.5
+network:
+  rack_units_per_network_rack: 42   # 스위치 수용 랙 1대의 유효 U

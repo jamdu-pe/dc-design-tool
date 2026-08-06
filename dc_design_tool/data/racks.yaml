@@ -1,0 +1,110 @@
+# 랙 시스템 카탈로그 (레고 블록: type=rack)
+# 수치는 공개자료 기반 개략치. 정밀설계 전 벤더 확정 필요.
+- id: nvidia_gb200_nvl72
+  type: rack
+  vendor: NVIDIA
+  model: GB200 NVL72
+  interface:
+    power_kw_typical: 120
+    power_kw_peak: 132
+    power_factor: 0.95
+    cooling: liquid_d2c
+    liquid_fraction: 0.85       # 약 85% 열을 액냉이 흡수(잔열 공냉)
+    supply_water_c: 32
+    rack_units: 48
+    footprint_m2: 1.2
+    weight_kg: 1360
+    accel_count: 72             # Blackwell GPU
+    scaleout_ports: 72
+    port_speed_gbps: 800
+    overhead_kw: 0.3            # 전원셸프·관리 네트워크 등 잔여 소비
+  composed_of:                  # 18 x 컴퓨트 트레이(4 GPU) + 9 x NVLink 스위치 트레이
+    - {id: nvidia_gb200_compute_tray, count: 18}
+    - {id: nvidia_nvlink_switch_tray, count: 9}
+  as_of_date: "2025-03"
+  confidence: vendor
+  source_url: "https://x.com/trendforce/status/1900050272568926560"
+
+- id: nvidia_gb300_nvl72
+  type: rack
+  vendor: NVIDIA
+  model: GB300 NVL72
+  interface:
+    power_kw_typical: 140
+    power_kw_peak: 150
+    power_factor: 0.95
+    cooling: liquid_d2c
+    liquid_fraction: 0.88
+    supply_water_c: 32
+    rack_units: 48
+    footprint_m2: 1.2
+    weight_kg: 1400
+    accel_count: 72
+    scaleout_ports: 72
+    port_speed_gbps: 800
+  as_of_date: "2025-08"
+  confidence: projected
+  source_url: "https://www.sunbirddcim.com/blog/how-much-power-does-nvidia-gb300-nvl72-need"
+
+- id: nvidia_vera_rubin_nvl144
+  type: rack
+  vendor: NVIDIA
+  model: Vera Rubin NVL144
+  interface:
+    power_kw_typical: 550
+    power_kw_peak: 600
+    power_factor: 0.95
+    cooling: liquid_d2c
+    liquid_fraction: 0.92
+    supply_water_c: 35
+    rack_units: 48
+    footprint_m2: 1.4
+    weight_kg: 1800
+    accel_count: 144
+    scaleout_ports: 144
+    port_speed_gbps: 1600
+  as_of_date: "2026-03"
+  confidence: projected
+  source_url: "https://ai-infrastructure.net/nvidia-gpu-roadmap/"
+
+- id: google_tpu_v7_ironwood_pod_rack
+  type: rack
+  vendor: Google
+  model: TPU v7 Ironwood (rack unit, 개략)
+  interface:
+    power_kw_typical: 100
+    power_kw_peak: 120
+    power_factor: 0.95
+    cooling: liquid_d2c
+    liquid_fraction: 0.85
+    supply_water_c: 30
+    rack_units: 48
+    footprint_m2: 1.2
+    weight_kg: 1300
+    accel_count: 64
+    scaleout_ports: 64
+    port_speed_gbps: 800
+  as_of_date: "2025-11"
+  confidence: projected
+  source_url: "https://www.tomshardware.com/tech-industry/artificial-intelligence/google-deploys-new-axion-cpus-and-seventh-gen-ironwood-tpu-training-and-inferencing-pods-beat-nvidia-gb300-and-shape-ai-hypercomputer-model"
+
+- id: aws_trainium3_ultraserver_rack
+  type: rack
+  vendor: AWS
+  model: Trainium3 UltraServer (rack unit, 개략)
+  interface:
+    power_kw_typical: 110
+    power_kw_peak: 130
+    power_factor: 0.95
+    cooling: liquid_d2c
+    liquid_fraction: 0.85
+    supply_water_c: 30
+    rack_units: 48
+    footprint_m2: 1.2
+    weight_kg: 1300
+    accel_count: 64
+    scaleout_ports: 64
+    port_speed_gbps: 800
+  as_of_date: "2026-01"
+  confidence: projected
+  source_url: "https://oplexa.com/amazon-trainium-3-vs-nvidia-blackwell/"

@@ -1,0 +1,6 @@
+# 이중화 계수. n = 필요 최소 대수(용량기준)
+# multiplier/extra 로 실제 설치 대수 산정: installed = ceil(n * multiplier) + extra
+N:    {multiplier: 1.0, extra: 0}
+"N+1": {multiplier: 1.0, extra: 1}
+"N+2": {multiplier: 1.0, extra: 2}
+"2N":  {multiplier: 2.0, extra: 0}

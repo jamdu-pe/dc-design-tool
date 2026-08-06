@@ -1,0 +1,24 @@
+# 전기 상세 설계 계수(개념설계용, 관할 규정에 맞게 교체)
+autonomy_min_by_tier:   # UPS 배터리 자립시간(분) — 발전기 기동/절체 대비
+  I: 5
+  II: 8
+  III: 10
+  IV: 15
+battery:
+  depth_of_discharge: 0.8   # 방전심도
+  inverter_eff: 0.95
+harmonic:
+  thd_i_assumed: 0.10       # 비선형 부하 전류 THD 가정
+  transformer_factor: 1.10  # 변압기 고조파 여유(K-factor 대체 개략)
+  generator_factor: 1.25    # 발전기 비선형/스텝부하 여유
+demand:
+  demand_factor: 0.9        # 수용률
+  design_margin: 0.15       # 설계 여유
+distribution:
+  rack_voltage_v: 415       # 랙 급전 전압(3상)
+  primary_kv: 22.9          # 수전 전압(국내 특고압 예)
+  feeds_per_rack:           # 랙당 급전 경로 수(각 경로가 랙 전부하를 담당)
+    default: 1
+    "2N": 2                 # 이중화 2N 시 랙당 이중 급전
+  # 경로당 PDU 대수는 랙 부하 / PDU 용량으로 산정한다(고정 대수 사용 금지).
+  busway_standard_a: [250, 400, 630, 800, 1000, 1250, 1600, 2000]

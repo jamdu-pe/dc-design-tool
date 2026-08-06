@@ -1,0 +1,14 @@
+# 공간/구조 계수(개념설계용, 프로젝트 조건에 맞게 교체)
+white_space:
+  aisle_factor: 3.0          # 랙 점유면적 대비 배수(핫/콜드 아일·서비스 클리어런스 포함)
+  racks_per_row: 10          # 열(row)당 랙 수 — 버스웨이/열 구성과 연동
+support_area:                # 화이트스페이스 면적 대비 부속실 비율(하한 추정)
+  electrical_room_factor: 0.35   # 전기실(UPS/배터리/스위치기어/변압기)
+  mechanical_room_factor: 0.30   # 기계실(CDU/펌프/열교환기)
+  support_factor: 0.15           # 운영·보안·창고·복도 등
+  # 실제 부속실 면적은 '설치 장비 footprint 합 × 이격계수'와 위 비율 중 큰 값을 쓴다.
+  # 비율만 쓰면 고밀도 설계에서 장비가 들어가지 않는 면적이 나온다.
+  equipment_clearance_factor: 2.5   # 유지보수 통로·이격·반입동선 포함 배수
+structure:
+  floor_load_limit_kg_per_m2: 1200   # 슬래브 허용하중(고밀도 랙 검증 기준)
+  clear_height_mm: 4500              # 액냉 배관·전기 트레이 포함 유효 층고

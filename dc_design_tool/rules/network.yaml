@@ -1,0 +1,8 @@
+# 스케일아웃 패브릭 설계 계수(개념설계용)
+fabric:
+  topology: leaf_spine
+  oversubscription: 1.0     # 다운링크:업링크 비. 1.0 = 비차단(non-blocking)
+cabling:
+  ends_per_link: 2          # 링크 양단 트랜시버
+  spare_ratio: 0.05         # 트랜시버·케이블 예비율
+  media: fiber_mpo

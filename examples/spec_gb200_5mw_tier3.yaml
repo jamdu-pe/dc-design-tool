@@ -1,0 +1,10 @@
+project: "AI DC 개념설계 - GB200 5MW Tier III"
+it_power_mw: 5.0
+rack_id: nvidia_gb200_nvl72
+tier: "III"
+electrical_redundancy: "2N"
+mechanical_redundancy: "N+1"
+chw_delta_t_k: 10
+target_pue: 1.25
+ambient_design_c: 33
+climate: "KR-Busan"

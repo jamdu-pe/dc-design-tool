@@ -1,0 +1,22 @@
+# Streamlit Community Cloud 배포용 의존성.
+#
+# Cloud 는 저장소 루트의 이 파일만 보고 환경을 만든다(pyproject.toml 의 extras 는 읽지 않는다).
+# 로컬 개발은 `pip install -e ".[ui]"` 를 써도 되고, 이 파일을 써도 된다.
+#
+# 이 저장소 자체(dc_design_tool 패키지)는 여기에 적지 않는다.
+# app.py 가 저장소 루트에 있어 Streamlit 이 루트를 sys.path 에 넣어주므로,
+# `import dc_design_tool` 은 설치 없이 하위 폴더에서 바로 잡힌다.
+
+streamlit>=1.30
+pydantic>=2.5
+pyyaml>=6.0
+openpyxl>=3.1
+python-docx>=1.1
+
+# app.py 가 표 렌더에 직접 import 한다. streamlit 이 전이 의존으로 끌어오기는 하지만,
+# 직접 import 하는 패키지는 직접 선언한다(전이 의존이 빠지면 조용히 깨진다).
+pandas>=2.0
+
+# 사번+비밀번호 로그인. 0.3.x 와 0.4.x 의 API 가 서로 호환되지 않으므로 상한을 건다
+# (0.4.x: Authenticate(...).login(location=...) + st.session_state 로 결과 전달).
+streamlit-authenticator>=0.4.2,<0.5

@@ -1,0 +1,37 @@
+[project]
+name = "dc-design-tool"
+version = "0.1.0"
+description = "AI 데이터센터 M&E 개념설계 자동화 도구 (레고형 + 에이전트)"
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2.5",
+    "pyyaml>=6.0",
+    "openpyxl>=3.1",
+    "python-docx>=1.1",
+    "typer>=0.12",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+# 웹 UI(app.py) 전용. CLI만 쓰는 환경에 웹 스택을 강제하지 않도록 분리했다.
+# Streamlit Community Cloud 는 이 extras 를 읽지 않는다 — 루트의 requirements.txt 를 쓴다.
+# 두 목록은 같이 갱신할 것.
+ui = ["streamlit>=1.30", "pandas>=2.0", "streamlit-authenticator>=0.4.2,<0.5"]
+# MCP 서버(dc-design-mcp) 전용.
+mcp = ["mcp>=1.2"]
+
+[project.scripts]
+dc-design = "dc_design_tool.cli:app"
+dc-design-mcp = "dc_design_tool.mcp_server:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["dc_design_tool", "dc_design_tool.engine", "dc_design_tool.reports"]
+
+# 카탈로그·규칙·에이전트 정의는 런타임에 읽히므로 패키지 데이터로 포함해야 한다
+# (미포함 시 비-editable 설치에서 catalog.load_blocks()가 실패한다).
+[tool.setuptools.package-data]
+dc_design_tool = ["data/*.yaml", "rules/*.yaml", "rules/regions/*.yaml", "agents/*.md"]

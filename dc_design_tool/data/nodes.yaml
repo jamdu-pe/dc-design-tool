@@ -1,0 +1,34 @@
+# 노드(트레이) 카탈로그 (type=node)
+#
+# 랙 = 컴퓨트 트레이 + 스위치 트레이 + 전원셸프 오버헤드로 조립된다.
+# overhead_kw 는 구성 칩으로 환산되지 않는 잔여 소비(CPU·팬·전원변환 손실)다.
+- id: nvidia_gb200_compute_tray
+  type: node
+  vendor: NVIDIA
+  model: GB200 Compute Tray (2 x GB200 Superchip)
+  interface:
+    overhead_kw: 0.6              # Grace CPU 2개 + 팬·전원변환 손실
+    cooling: liquid_d2c
+    liquid_fraction: 0.85
+    rack_units: 1
+    scaleout_ports: 4
+    port_speed_gbps: 800
+  composed_of:
+    - {id: nvidia_b200, count: 4}
+  as_of_date: "2025-03"
+  confidence: projected
+  source_url: "https://x.com/trendforce/status/1900050272568926560"
+
+- id: nvidia_nvlink_switch_tray
+  type: node
+  vendor: NVIDIA
+  model: NVLink Switch Tray
+  interface:
+    power_kw_typical: 2.5         # 스케일업(NVLink) 스위치 — 가속기 미탑재
+    cooling: liquid_d2c
+    liquid_fraction: 0.85
+    rack_units: 1
+    accel_count: 0
+  as_of_date: "2025-03"
+  confidence: projected
+  source_url: "https://x.com/trendforce/status/1900050272568926560"

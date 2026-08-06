@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+out/
+.venv/
+
+# 자격증명 — 절대 커밋 금지. 템플릿(.streamlit/secrets.toml.example)만 저장소에 둔다.
+.streamlit/secrets.toml
+.env
+
+# 사용자가 UI 에서 등록한 랙. 저장소는 배포본 카탈로그만 담은 데모 상태로 유지한다
+# (사내 장비 사양이 공개 저장소로 새는 것을 막는다).
+dc_design_tool/data/user_racks.yaml

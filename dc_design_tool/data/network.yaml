@@ -1,0 +1,108 @@
+# 네트워크 장비 카탈로그 (type=network)
+#
+# [순서 주의] engine 이 아직 `_first()`(해당 subtype 의 첫 블록)로 장비를 고른다.
+# 각 subtype 의 기존 기본 블록을 맨 앞에 두고 신규 후보는 뒤에 붙일 것.
+# 순서를 바꾸면 모든 설계 결과가 조용히 바뀐다. (선정 엔진 도입 시 이 제약은 사라진다)
+- id: leaf_switch_64x800g
+  type: network
+  subtype: leaf
+  vendor: Generic
+  model: LEAF-64x800G
+  interface:
+    ports: 64
+    port_speed_gbps: 800
+    rack_units: 2
+  as_of_date: "2025-06"
+  confidence: vendor
+  source_url: "generic-industry-typical"
+
+- id: spine_switch_64x800g
+  type: network
+  subtype: spine
+  vendor: Generic
+  model: SPINE-64x800G
+  interface:
+    ports: 64
+    port_speed_gbps: 800
+    rack_units: 2
+  as_of_date: "2025-06"
+  confidence: vendor
+  source_url: "generic-industry-typical"
+
+- id: transceiver_800g_osfp
+  type: network
+  subtype: transceiver
+  vendor: Generic
+  model: OSFP-800G-DR8
+  interface:
+    port_speed_gbps: 800
+    media: fiber_mpo
+  as_of_date: "2025-06"
+  confidence: vendor
+  source_url: "generic-industry-typical"
+
+# ---------------------------------------------------------------------------
+# 교체용 후보 (신규). 위 기본 블록보다 뒤에 둘 것 — 파일 상단 [순서 주의] 참고.
+#
+# 주의: "128x400G 단일 SKU"는 공개 자료에서 확인되지 않았다. 51.2T 급 스위치는
+# 64x800G OSFP 가 표준 형상이며, 400G 는 OSFP 브레이크아웃으로 포트를 2배 늘려 쓴다.
+# 따라서 400G 후보는 '브레이크아웃 구성'으로 등록하고 confidence: projected 로 둔다.
+# ---------------------------------------------------------------------------
+
+- id: leaf_nvidia_sn5600_64x800g
+  type: network
+  subtype: leaf
+  vendor: NVIDIA
+  model: Spectrum-4 SN5600
+  interface:
+    ports: 64                  # OSFP 64포트, 포트당 10/25/50/100/200/400/800G (확인)
+    port_speed_gbps: 800
+    rack_units: 2
+    throughput_tbps: 51.2      # (확인)
+    power_kw_typical: 0.94     # 통상 소비전력 940W (확인)
+  as_of_date: "2026-08"
+  confidence: vendor
+  source_url: "https://networking-docs.nvidia.com/sn5000hw/specifications"
+
+- id: spine_nvidia_sn5600_64x800g
+  type: network
+  subtype: spine
+  vendor: NVIDIA
+  model: Spectrum-4 SN5600
+  interface:
+    ports: 64
+    port_speed_gbps: 800
+    rack_units: 2
+    throughput_tbps: 51.2
+    power_kw_typical: 0.94
+  as_of_date: "2026-08"
+  confidence: vendor
+  source_url: "https://networking-docs.nvidia.com/sn5000hw/specifications"
+
+- id: leaf_arista_7060x6_128x400g
+  type: network
+  subtype: leaf
+  vendor: Arista
+  model: 7060X6-64PE (128x400G 브레이크아웃 구성)
+  interface:
+    ports: 128                 # 64 OSFP × 2 브레이크아웃. 데이터시트는 최대 320포트 명시
+    port_speed_gbps: 400       # 800/400/200/100/50/40/25/10G 유연 구성 (확인)
+    rack_units: 2
+    throughput_tbps: 51.2      # (확인)
+  as_of_date: "2026-08"
+  confidence: projected        # 하드웨어는 확인, 128x400G 구성은 브레이크아웃 산정치
+  source_url: "https://www.arista.com/assets/data/pdf/Datasheets/7060X6-Datasheet.pdf (64x800G OSFP 를 400G 브레이크아웃으로 구성)"
+
+- id: spine_arista_7060x6_128x400g
+  type: network
+  subtype: spine
+  vendor: Arista
+  model: 7060X6-64PE (128x400G 브레이크아웃 구성)
+  interface:
+    ports: 128
+    port_speed_gbps: 400
+    rack_units: 2
+    throughput_tbps: 51.2
+  as_of_date: "2026-08"
+  confidence: projected
+  source_url: "https://www.arista.com/assets/data/pdf/Datasheets/7060X6-Datasheet.pdf (64x800G OSFP 를 400G 브레이크아웃으로 구성)"

@@ -1,0 +1,21 @@
+# 시나리오 비교 예제: 칩 세대 × 전기 이중화 스윕
+# 실행: dc-design compare --spec examples/sweep_chip_generation.yaml --out out/compare
+project: "칩 세대·이중화 비교 (5MW, Tier III)"
+
+base:                          # 모든 시나리오의 공통 조건
+  it_power_mw: 5.0
+  rack_id: nvidia_gb200_nvl72
+  tier: "III"
+  electrical_redundancy: "N+1"
+  mechanical_redundancy: "N+1"
+  chw_delta_t_k: 10
+  target_pue: 1.35
+  ambient_design_c: 33
+  climate: "KR-Busan"
+
+sweep:                         # 축마다 값 목록 → 곱집합으로 전개
+  rack_id:
+    - nvidia_gb200_nvl72
+    - nvidia_gb300_nvl72
+    - nvidia_vera_rubin_nvl144
+  electrical_redundancy: ["N+1", "2N"]

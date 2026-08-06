@@ -1,0 +1,46 @@
+# 가속기 칩 카탈로그 (type=chip)
+#
+# 주의: 칩 단위 소비전력은 벤더가 랙 단위로만 공개하는 경우가 많다.
+# 아래 값은 같은 출처의 '랙 정격'에서 역산한 개략치이므로 confidence 는 projected 로 둔다.
+# 벤더 데이터시트를 확보하면 값과 confidence 를 함께 갱신할 것.
+- id: nvidia_b200
+  type: chip
+  vendor: NVIDIA
+  model: Blackwell B200
+  interface:
+    power_kw_typical: 1.2         # GB200 NVL72 랙 정격에서 역산
+    power_kw_peak: 1.3
+    cooling: liquid_d2c
+    liquid_fraction: 0.85
+    accel_count: 1
+  as_of_date: "2025-03"
+  confidence: projected
+  source_url: "https://x.com/trendforce/status/1900050272568926560"
+
+- id: google_tpu_v7_ironwood_chip
+  type: chip
+  vendor: Google
+  model: TPU v7 Ironwood
+  interface:
+    power_kw_typical: 1.55        # 랙 100kW / 64 accel 에서 역산
+    power_kw_peak: 1.85
+    cooling: liquid_d2c
+    liquid_fraction: 0.85
+    accel_count: 1
+  as_of_date: "2025-11"
+  confidence: projected
+  source_url: "https://www.tomshardware.com/tech-industry/artificial-intelligence/google-deploys-new-axion-cpus-and-seventh-gen-ironwood-tpu-training-and-inferencing-pods-beat-nvidia-gb300-and-shape-ai-hypercomputer-model"
+
+- id: aws_trainium3_chip
+  type: chip
+  vendor: AWS
+  model: Trainium3
+  interface:
+    power_kw_typical: 1.7         # 랙 110kW / 64 accel 에서 역산
+    power_kw_peak: 2.0
+    cooling: liquid_d2c
+    liquid_fraction: 0.85
+    accel_count: 1
+  as_of_date: "2026-01"
+  confidence: projected
+  source_url: "https://oplexa.com/amazon-trainium-3-vs-nvidia-blackwell/"

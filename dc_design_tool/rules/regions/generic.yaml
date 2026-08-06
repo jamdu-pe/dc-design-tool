@@ -1,0 +1,6 @@
+# 기본(무관할) 규격 팩 — 지역 규정을 적용하지 않는 상태.
+# rules/*.yaml 의 값을 그대로 쓰며, 지역 검증(수전전압·THD)은 판정하지 않고 정보만 남긴다.
+name: "일반 (관할 규정 미지정)"
+reference: "ASHRAE / Uptime Institute 등 국제 일반 기준"
+standards: {}      # 비어 있으면 지역 검증은 info 로만 보고
+overrides: {}      # 오버라이드 없음

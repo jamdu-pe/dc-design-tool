@@ -1,0 +1,18 @@
+# ASHRAE 환경등급(개념설계용 요약). 정확한 판정은 원문(TC 9.9) 확인 필요.
+# 액냉 수온등급: 시설 공급수(FWS) 최대 온도[°C] 기준
+water_classes:
+  W17: 17     # 냉동기 상시 필요
+  W27: 27
+  W32: 32     # 일반적 D2C 액냉 설계점
+  W40: 40     # 프리쿨링 유리
+  W45: 45     # 냉동기 없이 운전 가능 범위
+# 공기 환경등급: IT 흡입공기 온도[°C]
+air_classes:
+  A1: {recommended_min_c: 18, recommended_max_c: 27, allowable_max_c: 32}
+  A2: {recommended_min_c: 18, recommended_max_c: 27, allowable_max_c: 35}
+  A3: {recommended_min_c: 18, recommended_max_c: 27, allowable_max_c: 40}
+  A4: {recommended_min_c: 18, recommended_max_c: 27, allowable_max_c: 45}
+design:
+  air_class: A1              # 설계 적용 공기등급
+  max_water_class: W45       # 허용 최대 수온등급
+  dry_cooler_approach_k: 8   # 드라이쿨러/냉각탑 접근온도 — 외기+접근 ≤ 공급수온이면 프리쿨링 가능

@@ -1,0 +1,124 @@
+# 냉각 장비 카탈로그 (type=cooling). capacity_kw = 열제거 능력
+#
+# [순서 주의] engine 이 아직 `_first()`(해당 subtype 의 첫 블록)로 장비를 고른다.
+# 각 subtype 의 기존 기본 블록을 맨 앞에 두고 신규 후보는 뒤에 붙일 것.
+# 순서를 바꾸면 모든 설계 결과가 조용히 바뀐다. (선정 엔진 도입 시 이 제약은 사라진다)
+#
+# [footprint_m2 주의] 신규 벤더 블록의 capacity 는 데이터시트 확인값이지만,
+# footprint_m2 는 데이터시트 치수를 확인하지 못해 동급 장비 통상값으로 넣었다.
+# 공간 엔진(부속실 면적)에 직접 영향을 주므로 실시설계 전 실측 치수로 교체할 것.
+- id: cdu_liquid_1300kw
+  type: cooling
+  subtype: cdu                 # Coolant Distribution Unit (액-액)
+  vendor: Generic
+  model: CDU-1300
+  interface:
+    capacity_kw: 1300
+    medium: liquid
+    supply_water_c: 32
+    footprint_m2: 1.5
+  as_of_date: "2025-06"
+  confidence: vendor
+  source_url: "generic-industry-typical"
+
+- id: rdhx_60kw
+  type: cooling
+  subtype: rear_door_hx        # 후면도어 열교환기(잔열 공냉 보완)
+  vendor: Generic
+  model: RDHx-60
+  interface:
+    capacity_kw: 60
+    medium: liquid_to_air
+    footprint_m2: 0.0
+  as_of_date: "2025-06"
+  confidence: vendor
+  source_url: "generic-industry-typical"
+
+- id: chiller_1000rt
+  type: cooling
+  subtype: chiller
+  vendor: Generic
+  model: WC-Chiller-1000RT
+  interface:
+    capacity_kw: 3517          # 1000 RT ≈ 3517 kW
+    medium: chilled_water
+    footprint_m2: 20
+  as_of_date: "2025-06"
+  confidence: vendor
+  source_url: "generic-industry-typical"
+
+# ---------------------------------------------------------------------------
+# 교체용 후보 (신규). 위 기본 블록보다 뒤에 둘 것 — 파일 상단 [순서 주의] 참고.
+# ---------------------------------------------------------------------------
+
+- id: cdu_coolit_chx1000
+  type: cooling
+  subtype: cdu
+  vendor: CoolIT Systems
+  model: CHx1000
+  interface:
+    capacity_kw: 1000          # 3K 접근온도 기준 정격 (데이터시트 확인)
+    medium: liquid
+    supply_water_c: 32         # 미확인 — 국내 D2C 통상 설계점
+    flow_lpm_rated: 1500       # 1.5 LPM/kW × 1000kW (데이터시트 확인)
+    footprint_m2: 1.5          # 미확인 — 동급 통상값
+  as_of_date: "2026-08"
+  confidence: vendor
+  source_url: "https://www.coolitsystems.com/products/cdu/"
+
+- id: cdu_vertiv_xdu1350
+  type: cooling
+  subtype: cdu
+  vendor: Vertiv
+  model: Liebert XDU 1350
+  interface:
+    capacity_kw: 1368          # 4K ATD 기준 정격 (8K ATD 시 2912kW)
+    medium: liquid
+    supply_water_c: 32         # 미확인 — 국내 D2C 통상 설계점
+    flow_lpm_rated: 1200       # 2펌프 정격 유량 (데이터시트 확인)
+    footprint_m2: 1.5          # 미확인 — 동급 통상값
+  as_of_date: "2026-08"
+  confidence: vendor
+  source_url: "https://www.vertiv.com/en-us/products-catalog/thermal-management/high-density-solutions/liebert-xdu1350-coolant-distribution-unit/"
+
+- id: cdu_coolit_chx750
+  type: cooling
+  subtype: cdu
+  vendor: CoolIT Systems
+  model: CHx750
+  interface:
+    capacity_kw: 750           # 미확인 — 제품군 명명규칙(CHx1000=1000kW)에서 추정
+    medium: liquid
+    supply_water_c: 32
+    footprint_m2: 1.2          # 미확인 — 동급 통상값
+  as_of_date: "2026-08"
+  confidence: projected        # 제품은 실재하나 공개 데이터시트에서 용량 미확인
+  source_url: "https://www.coolitsystems.com/product/chx750-cdu/ (용량은 제품군 명명규칙 기반 추정)"
+
+- id: chiller_carrier_19dv_1150rt
+  type: cooling
+  subtype: chiller
+  vendor: Carrier
+  model: AquaEdge 19DV (1150 RT)
+  interface:
+    capacity_kw: 4044          # 1150 RT — 공개 정격범위 상한 (확인)
+    medium: chilled_water
+    refrigerant: R-1233zd(E)
+    footprint_m2: 24           # 미확인 — 동급 통상값
+  as_of_date: "2026-08"
+  confidence: vendor
+  source_url: "https://www.carrier.com/marine-offshore/en/worldwide/news/news-article/carrier-aquaedge-19dv-chiller-line-expands-to-1150-tons.html"
+
+- id: chiller_carrier_19dv_500rt
+  type: cooling
+  subtype: chiller
+  vendor: Carrier
+  model: AquaEdge 19DV (500 RT)
+  interface:
+    capacity_kw: 1759          # 500 RT — 공개 정격범위(350~1150RT) 내 선택점
+    medium: chilled_water
+    refrigerant: R-1233zd(E)
+    footprint_m2: 14           # 미확인 — 동급 통상값
+  as_of_date: "2026-08"
+  confidence: projected        # 정격범위는 확인, 해당 500RT 구성의 개별 사양은 미확인
+  source_url: "https://www.carrier.com/us/en/commercial/chillers/19dv/ (350~1150RT 범위 내 선택점)"

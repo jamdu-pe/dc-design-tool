@@ -1,0 +1,10 @@
+project: "AI DC 개념설계 - GB300 8MW Tier IV (부산)"
+it_power_mw: 8.0
+rack_id: nvidia_gb300_nvl72
+tier: "IV"                    # Uptime Tier IV — fault tolerant
+electrical_redundancy: "2N"   # Tier IV 전기 최소요건
+mechanical_redundancy: "N+2"  # Tier IV 기계 최소요건
+chw_delta_t_k: 10
+target_pue: 1.25
+ambient_design_c: 33          # 부산 냉방 설계외기(건구) 개략
+climate: "KR-Busan"
