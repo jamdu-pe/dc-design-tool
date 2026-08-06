@@ -4,8 +4,8 @@
 
 ## 한 줄 요약
 엔진·카탈로그·산출물은 동작하며 테스트 298개가 통과한다. Streamlit 웹 UI에 사번
-로그인을 붙이고 Streamlit Community Cloud 배포 준비를 마쳤다. **실제 배포는 아직
-수행되지 않았다**(GitHub 저장소 미생성).
+로그인을 붙였고, GitHub(`jamdu-pe/dc-design-tool`, private)에 올렸다.
+**Streamlit Cloud 앱 생성은 아직 남았다.**
 
 ## 테스트
 ```
@@ -58,16 +58,24 @@ pytest -q   → 298 passed
 
 ## 배포 상태
 
+원격: `https://github.com/jamdu-pe/dc-design-tool.git` (private)
+
 | 단계 | 상태 |
 |---|---|
 | git 저장소 초기화 | 완료 (`main`) |
-| 최초 커밋 | 완료 |
-| GitHub 저장소 생성·push | **미완** — 계정/조직 미정, `gh` CLI 미설치 |
-| share.streamlit.io 앱 생성 | **미완** — 브라우저 로그인 필요 |
+| 최초 커밋 | 완료 (`49b9dbd`, 90파일) |
+| GitHub 저장소 생성·push | 완료 (2026-08-06) |
+| share.streamlit.io 앱 생성 | **미완** — 브라우저 작업 |
 | Secrets 설정 | **미완** — 실제 사번·비밀번호 필요 |
-| 뷰어 초대 | **미완** |
+| 뷰어 초대 (Sharing) | **미완** |
 
 절차는 README의 "Streamlit Community Cloud 배포" 절 참고.
+
+### 인증 관련 주의
+- 이 PC의 Windows 자격 증명 관리자에 **다른 사람 계정(`Immersion-Ben`) 토큰이
+  저장돼 있었고 제거했다.** git push 전에 어느 계정으로 인증되는지 확인할 것.
+- 그 계정에 빈 private 저장소 `Immersion-Ben/dc-design-tool` 이 잘못 생성됐다.
+  코드는 전송되지 않았으나(0 KB, 커밋 0건) 계정 소유자의 삭제가 필요하다.
 
 ## 알려진 제약 · 남은 일
 
