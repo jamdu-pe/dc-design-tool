@@ -41,7 +41,20 @@ def _submit(at: AppTest, user: str, password: str) -> AppTest:
 
 # ---------- 설정 부재: fail closed ----------
 
-def test_without_secrets_the_app_refuses_to_open():
+@pytest.fixture
+def no_local_secrets(tmp_path, monkeypatch):
+    """로컬에 자격증명이 설정돼 있어도 '설정 없음' 경로를 시험하게 만든다.
+
+    Streamlit 은 `.streamlit/secrets.toml` 을 **작업 디렉터리 기준**으로 찾는다.
+    이 파일은 gitignore 라 새로 받은 저장소에는 없지만, 로그인을 한 번이라도 설정한
+    PC 에서는 존재한다. 그대로 두면 아래 fail-closed 테스트가 실제 자격증명을 읽어
+    "설정이 없으면 화면을 열지 않는다"는 성질을 전혀 검증하지 못한 채 통과한다.
+    빈 디렉터리로 옮겨서 secrets 를 못 찾는 상태를 실제로 만든다.
+    """
+    monkeypatch.chdir(tmp_path)
+
+
+def test_without_secrets_the_app_refuses_to_open(no_local_secrets):
     """Secrets 를 빠뜨린 채 배포해도 화면이 공개되면 안 된다."""
     at = _app()
     assert not at.exception, at.exception
@@ -49,7 +62,7 @@ def test_without_secrets_the_app_refuses_to_open():
     assert any("로그인 설정" in e.value for e in at.error)
 
 
-def test_missing_secrets_message_tells_where_to_fix_it():
+def test_missing_secrets_message_tells_where_to_fix_it(no_local_secrets):
     at = _app()
     guidance = " ".join(e.value for e in at.error)
     assert "secrets.toml" in guidance
