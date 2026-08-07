@@ -17,6 +17,6 @@ python-docx>=1.1
 # 직접 import 하는 패키지는 직접 선언한다(전이 의존이 빠지면 조용히 깨진다).
 pandas>=2.0
 
-# 사번+비밀번호 로그인. 0.3.x 와 0.4.x 의 API 가 서로 호환되지 않으므로 상한을 건다
+# 실명+비밀번호 로그인. 0.3.x 와 0.4.x 의 API 가 서로 호환되지 않으므로 상한을 건다
 # (0.4.x: Authenticate(...).login(location=...) + st.session_state 로 결과 전달).
 streamlit-authenticator>=0.4.2,<0.5
