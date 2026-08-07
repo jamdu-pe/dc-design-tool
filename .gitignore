@@ -7,6 +7,10 @@ dist/
 out/
 .venv/
 
+# 작업용 임시 공간 — 격리 워크트리와 에이전트 진행 기록. 저장소에 담지 않는다.
+.claude/worktrees/
+.superpowers/
+
 # 자격증명 — 절대 커밋 금지. 템플릿(.streamlit/secrets.toml.example)만 저장소에 둔다.
 .streamlit/secrets.toml
 .env
