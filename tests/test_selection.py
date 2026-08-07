@@ -229,3 +229,41 @@ def test_interface_rejects_unknown_mounting():
     from dc_design_tool.engine.models import Interface
     with pytest.raises(PydanticError):
         Interface(mounting="ceiling")
+
+
+# ---------- 공냉 후보 교체 ----------
+
+def test_air_cooling_has_both_mounting_types():
+    """랙 장착형과 실 장착형이 모두 있어야 방식 비교가 성립한다."""
+    blocks = load_blocks()
+    mountings = {b.interface.mounting
+                 for b in list_candidates("cooling", "air_cooling", blocks)}
+    assert mountings == {"rack", "room"}
+
+
+def test_swapping_to_room_air_cooling_changes_quantity_and_area():
+    """실 장착형으로 바꾸면 대수가 용량 기준으로 재산정되고 기계실 면적이 는다."""
+    blocks = load_blocks()
+    room = next(b for b in list_candidates("cooling", "air_cooling", blocks)
+                if b.interface.mounting == "room")
+    base = size(_spec())
+    swapped = size(_spec(), selections={"air_cooling": room.id})
+
+    assert base.cooling["air_cooling_mounting"] == "rack"
+    assert swapped.cooling["air_cooling_mounting"] == "room"
+    assert swapped.cooling["air_cooling_qty"] != base.cooling["air_cooling_qty"]
+    assert swapped.selections["air_cooling"] == room.id
+    # 랙 장착형은 footprint 0 → 실 장착형으로 바꾸면 기계실 장비면적이 늘어난다
+    assert (swapped.space["mechanical_equipment_m2"]
+            > base.space["mechanical_equipment_m2"])
+
+
+def test_air_cooling_quantity_uses_redundancy_rule_when_room_mounted():
+    """실 장착형은 CDU 와 같은 이중화 규칙을 탄다."""
+    blocks = load_blocks()
+    room = next(b for b in list_candidates("cooling", "air_cooling", blocks)
+                if b.interface.mounting == "room")
+    rule = load_rule("redundancy.yaml")["N+1"]
+    r = size(_spec(), selections={"air_cooling": room.id})
+    assert r.cooling["air_cooling_qty"] == calc.redundant_qty(
+        r.cooling["air_kw"], r.cooling["air_cooling_unit_kw"], rule)

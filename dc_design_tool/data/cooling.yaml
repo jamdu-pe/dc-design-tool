@@ -127,3 +127,48 @@
   as_of_date: "2026-08"
   confidence: projected        # 정격범위는 확인, 해당 500RT 구성의 개별 사양은 미확인
   source_url: "https://www.carrier.com/us/en/commercial/chillers/19dv/ (350~1150RT 범위 내 선택점)"
+
+- id: rdhx_motivair_chilleddoor_m16
+  type: cooling
+  subtype: air_cooling         # 공냉 잔열 처리 역할(방식은 interface.method)
+  vendor: Motivair (Schneider Electric)
+  model: ChilledDoor M16 (MCD-M16-48U800)
+  interface:
+    capacity_kw: 75            # 0~75kW 정격 (벤더 제품페이지 확인)
+    medium: liquid_to_air
+    method: rear_door_hx       # 후면도어 열교환기
+    mounting: rack              # 랙 후면 장착 → 랙당 1대
+    footprint_m2: 0.0          # 랙에 붙으므로 별도 바닥면적을 차지하지 않는다
+  as_of_date: "2026-08"
+  confidence: vendor
+  source_url: "https://www.motivaircorp.com/products/chilleddoor/ (0-75kW 정격; 모델번호는 리셀러 사양표 https://bluesquarepower.com/motivair-corporation-motivair-m16-chilleddoor-48u800-up-to-75kw-temp-ctrl-bottom-feed-1-pack-rack-mountable-black-it-75-kw-black-air-cooler-48u.html 교차확인)"
+
+- id: crah_vertiv_liebert_crv040
+  type: cooling
+  subtype: air_cooling         # 공냉 잔열 처리 역할(방식은 interface.method)
+  vendor: Vertiv
+  model: Liebert CRV CR040RC (600mm, 냉수식)
+  interface:
+    capacity_kw: 42.9          # 순감열용량 42.9kW(146.4 kBtuh), 모델명 정격 40kW급 (데이터시트 확인)
+    medium: chilled_water
+    method: in_row              # 열별(row) 배치형 공조 — Vertiv 자체 분류상 "row-based cooling"
+    mounting: room
+    footprint_m2: 0.71         # 600mm x 1175mm (데이터시트 치수 확인)
+  as_of_date: "2026-08"
+  confidence: vendor
+  source_url: "https://www.elecsupport.com/products/thermal-management/rackin-row-cooling/fixed-in-row/vertiv-liebert-crv"
+
+- id: crah_stulz_cyberair3pro_cw2_1280
+  type: cooling
+  subtype: air_cooling         # 공냉 잔열 처리 역할(방식은 interface.method)
+  vendor: STULZ
+  model: CyberAir 3PRO ASD 1280 CW2
+  interface:
+    capacity_kw: 103.9         # 26°C/40%RH 기준 감열용량 103.9kW (제품 매뉴얼 사양표 확인)
+    medium: chilled_water
+    method: crah                # 실내 바닥설치형 정밀공조기(CRAH)
+    mounting: room
+    footprint_m2: 3.08         # 2200mm x 1400mm, Cabinet size 4 (제품 매뉴얼 치수 확인)
+  as_of_date: "2026-08"
+  confidence: vendor
+  source_url: "https://www.manualslib.com/manual/1301689/Stulz-Cyberair-3pro-Cw2.html"
