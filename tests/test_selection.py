@@ -213,3 +213,19 @@ def test_candidate_table_marks_flagged_block_as_default():
     for role in SELECTABLE_ROLES:
         marked = [c["id"] for c in result.candidates[role] if c["is_default"]]
         assert len(marked) == 1, f"{role}: {marked}"
+
+
+# ---------- 장착 방식 인터페이스 ----------
+
+def test_interface_defaults_to_room_mounting():
+    """대부분의 장비는 실 단위 설치다. 랙 장착형만 명시한다."""
+    from dc_design_tool.engine.models import Interface
+    assert Interface().mounting == "room"
+    assert Interface().method is None
+
+
+def test_interface_rejects_unknown_mounting():
+    from pydantic import ValidationError as PydanticError
+    from dc_design_tool.engine.models import Interface
+    with pytest.raises(PydanticError):
+        Interface(mounting="ceiling")

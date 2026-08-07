@@ -17,6 +17,13 @@ class Interface(BaseModel):
     cooling: Optional[str] = None
     liquid_fraction: float = 0.0
     supply_water_c: Optional[float] = None
+    # 냉각장비 설치 형태. 수량 산정식이 갈리는 유일한 기준이다.
+    #   rack = 랙 후면 장착(랙당 1대, 이중화 대수 증설 불가)
+    #   room = 실 단위 설치(필요 용량 + 이중화 규칙으로 대수 산정)
+    mounting: Literal["rack", "room"] = "room"
+    # 기술 방식 표기(rear_door_hx | crah | in_row 등). 표시·추적용이고 계산에 쓰지 않는다.
+    # 같은 mounting 이라도 방식 이름이 달라야 보고서에서 구분되기 때문에 따로 둔다.
+    method: Optional[str] = None
     # 물리
     rack_units: Optional[int] = None
     footprint_m2: Optional[float] = None
