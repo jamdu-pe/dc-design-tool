@@ -23,14 +23,17 @@
   source_url: "generic-industry-typical"
 
 - id: rdhx_60kw
+  default: true                # air_cooling 역할의 기본 블록
   type: cooling
-  subtype: rear_door_hx        # 후면도어 열교환기(잔열 공냉 보완)
+  subtype: air_cooling         # 공냉 잔열 처리 역할(방식은 interface.method)
   vendor: Generic
   model: RDHx-60
   interface:
     capacity_kw: 60
     medium: liquid_to_air
-    footprint_m2: 0.0
+    method: rear_door_hx       # 후면도어 열교환기
+    mounting: rack             # 랙 후면 장착 → 랙당 1대
+    footprint_m2: 0.0          # 랙에 붙으므로 별도 바닥면적을 차지하지 않는다
   as_of_date: "2025-06"
   confidence: vendor
   source_url: "generic-industry-typical"

@@ -76,3 +76,66 @@ def test_missing_cooling_block_reports_catalog_absence(blocks):
     spec = Spec(rack_id="nvidia_gb200_nvl72", rack_count=1)
     with pytest.raises(KeyError, match="카탈로그 부재"):
         cooling.size_cooling(120.0, blocks["nvidia_gb200_nvl72"], spec, only_chiller)
+
+
+# ---------- 공냉 장비 (air_cooling) ----------
+
+def test_rack_mounted_air_cooling_is_one_per_rack(blocks):
+    """랙 후면 장착형은 랙당 1대다. 용량으로 대수를 줄이거나 늘리지 않는다."""
+    spec = Spec(rack_id="nvidia_gb200_nvl72", rack_count=42)
+    c, _ = cooling.size_cooling(5040.0, blocks["nvidia_gb200_nvl72"], spec, blocks,
+                                rack_count=42, rack_kw=120.0)
+    assert c["air_cooling_mounting"] == "rack"
+    assert c["air_cooling_qty"] == 42
+
+
+def test_rack_mounted_air_cooling_ignores_redundancy_grade(blocks):
+    """여분 도어를 매달 수 없으므로 이중화 등급에 불변이다."""
+    rack = blocks["nvidia_gb200_nvl72"]
+    qty = []
+    for grade in ("N", "N+2", "2N"):
+        c, _ = cooling.size_cooling(5040.0, rack, Spec(
+            rack_id="x", rack_count=42, mechanical_redundancy=grade), blocks,
+            rack_count=42, rack_kw=120.0)
+        qty.append(c["air_cooling_qty"])
+    assert qty == [42, 42, 42]
+
+
+def test_rack_air_load_is_reported(blocks):
+    """랙당 공냉 부하 = 랙 부하 x (1 - 액냉비율). GB200 은 120 x 0.15 = 18kW."""
+    spec = Spec(rack_id="nvidia_gb200_nvl72", rack_count=42)
+    c, _ = cooling.size_cooling(5040.0, blocks["nvidia_gb200_nvl72"], spec, blocks,
+                                rack_count=42, rack_kw=120.0)
+    assert c["rack_air_kw"] == pytest.approx(18.0, abs=0.1)
+
+
+def test_air_cooling_defaults_to_rdhx(blocks):
+    spec = Spec(rack_id="nvidia_gb200_nvl72", rack_count=42)
+    c, _ = cooling.size_cooling(5040.0, blocks["nvidia_gb200_nvl72"], spec, blocks,
+                                rack_count=42, rack_kw=120.0)
+    assert c["selected"]["air_cooling"] == "rdhx_60kw"
+    assert c["air_cooling_method"] == "rear_door_hx"
+
+
+def test_air_cooling_appears_in_bom(blocks):
+    spec = Spec(rack_id="nvidia_gb200_nvl72", rack_count=42)
+    _, bom = cooling.size_cooling(5040.0, blocks["nvidia_gb200_nvl72"], spec, blocks,
+                                  rack_count=42, rack_kw=120.0)
+    line = next(li for li in bom if li.item == "공냉장비")
+    assert line.block_id == "rdhx_60kw"
+    assert line.qty == 42
+    assert line.note == "랙당 1대"
+
+
+def test_rack_count_falls_back_to_spec(blocks):
+    """엔진을 직접 부를 때는 spec.rack_count 로 폴백한다."""
+    spec = Spec(rack_id="nvidia_gb200_nvl72", rack_count=7)
+    c, _ = cooling.size_cooling(840.0, blocks["nvidia_gb200_nvl72"], spec, blocks)
+    assert c["air_cooling_qty"] == 7
+
+
+def test_rack_mounted_without_rack_count_raises(blocks):
+    """랙 수량을 알 수 없으면 조용히 0대로 넘기지 않는다."""
+    spec = Spec(rack_id="nvidia_gb200_nvl72", it_power_mw=5.0)
+    with pytest.raises(ValueError, match="랙 수량"):
+        cooling.size_cooling(5040.0, blocks["nvidia_gb200_nvl72"], spec, blocks)

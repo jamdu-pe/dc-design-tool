@@ -14,9 +14,10 @@ from .models import Block, SizingResult, Spec
 
 # 교체 가능한 역할(subtype) → 블록 종류(type).
 # 이 표가 "설계에서 바꿀 수 있는 장비 축"의 정의다. 도메인 엔진이 실제로 소비하는
-# 역할만 싣는다(예: rear_door_hx 는 아직 어떤 엔진도 쓰지 않아 제외).
+# 역할만 싣는다. 역할을 추가하면 해당 subtype 후보 중 하나에 `default: true` 가
+# 있어야 한다(tests/test_selection.py 가 강제).
 SELECTABLE_ROLES: dict[str, str] = {
-    "cdu": "cooling", "chiller": "cooling",
+    "cdu": "cooling", "chiller": "cooling", "air_cooling": "cooling",
     "ups": "electrical", "battery": "electrical", "generator": "electrical",
     "transformer": "electrical", "pdu": "electrical", "busway": "electrical",
     "leaf": "network", "spine": "network", "transceiver": "network",
@@ -108,7 +109,8 @@ def size(spec: Spec, blocks: Optional[dict] = None,
 
     # ---- 2) 기계(냉각) ----
     cooling, c_bom = cooling_engine.size_cooling(it_kw, rack, spec, blocks,
-                                                 selections=selections)
+                                                 selections=selections,
+                                                 rack_count=n_rack, rack_kw=rack_kw)
     bom += c_bom
 
     # ---- 3) 전기 ----
