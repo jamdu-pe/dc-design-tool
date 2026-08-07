@@ -78,6 +78,7 @@ def check(result: SizingResult, spec: Spec,
     f += _check_structure(result)
     f += _check_distribution(result)
     f += _check_redundancy_effectiveness(result, spec, thresholds)
+    f += _check_air_cooling_rack_capacity(result)
     f += _check_pdu_capacity(result)
     f += _check_room_area(result, thresholds)
     f += _check_network_consistency(result, rack, blocks, thresholds)
@@ -268,6 +269,12 @@ def _check_redundancy_effectiveness(result: SizingResult, spec: Spec,
         ("MECHANICAL", "기계", spec.mechanical_redundancy, "CDU",
          c["cdu_qty"], c["cdu_unit_kw"], c["liquid_kw"], "kW"),
     ]
+    # 실 장착형 공냉장비만 이중화 대상이다. 랙 장착형은 랙당 1대라 여분을 둘 수 없어
+    # 아래 _check_air_cooling_rack_capacity 가 대신 본다.
+    if c.get("air_cooling_mounting") == "room":
+        cases.append(
+            ("AIR_COOLING", "기계", spec.mechanical_redundancy, "공냉장비",
+             c["air_cooling_qty"], c["air_cooling_unit_kw"], c["air_kw"], "kW"))
     for suffix, domain, grade, item, qty, unit, need, unit_label in cases:
         surviving = surviving_capacity(qty, unit, grade)
         ok = need <= 0 or surviving >= need * min_ratio
@@ -283,6 +290,31 @@ def _check_redundancy_effectiveness(result: SizingResult, spec: Spec,
             required=f"≥ {need * min_ratio:g}{unit_label}",
             rule="rules/redundancy.yaml + rules/compliance.yaml:redundancy"))
     return out
+
+
+def _check_air_cooling_rack_capacity(result: SizingResult) -> list[Finding]:
+    """랙 장착형 공냉장비의 단위용량이 랙당 공냉 부하를 감당하는지 확인.
+
+    랙 후면에 1대만 붙으므로 대수를 늘려 보완할 수 없다 — 미달이면 위반이다.
+    실 장착형은 이 검사 대상이 아니다(_check_redundancy_effectiveness 가 본다).
+    """
+    c = result.cooling
+    if c.get("air_cooling_mounting") != "rack":
+        return []
+    unit, need = c["air_cooling_unit_kw"], c["rack_air_kw"]
+    ok = unit >= need
+    return [Finding(
+        code="AIR_COOLING_RACK_CAPACITY", severity="info" if ok else "violation",
+        domain="기계",
+        message=(f"랙 장착형 공냉장비 단위용량 {unit}kW가 랙당 공냉 잔열 "
+                 f"{need}kW를 "
+                 + ("감당한다." if ok else
+                    "감당하지 못한다 — 랙당 1대만 설치할 수 있어 대수로 보완할 수 "
+                    "없다. 상위 용량 도어 또는 실 단위 방식(CRAH)으로 교체해야 한다.")
+                 + f" (랙 {c['air_cooling_qty']}대에 각 1대)"),
+        actual=f"{unit}kW/랙", required=f">= {need}kW",
+        rule="data/cooling.yaml:air_cooling.capacity_kw "
+             "+ data/racks.yaml:liquid_fraction")]
 
 
 def _check_pdu_capacity(result: SizingResult) -> list[Finding]:
