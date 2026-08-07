@@ -164,11 +164,15 @@
   vendor: STULZ
   model: CyberAir 3PRO ASD 1280 CW2
   interface:
-    capacity_kw: 103.9         # 26°C/40%RH 기준 감열용량 103.9kW (제품 매뉴얼 사양표 확인)
+    capacity_kw: 103.9         # 26°C/40%RH 감열용량 — 스캔 매뉴얼 재추출마다 80.8kW/160kW 등
+                                # 다른 값이 나와 확정 불가. 가장 많이 나온 값을 채택했으나 미확정.
     medium: chilled_water
     method: crah                # 실내 바닥설치형 정밀공조기(CRAH)
     mounting: room
-    footprint_m2: 3.08         # 2200mm x 1400mm, Cabinet size 4 (제품 매뉴얼 치수 확인)
+    footprint_m2: 2.5           # 미확인 — 매뉴얼 치수도 재추출마다 2200x1400 / 2200x2200 /
+                                # 3110x980 등으로 달라 신뢰 불가. STULZ 공식 제품페이지가 밝힌
+                                # 제품군 전체 범위(폭 0.95~3.35m x 깊이 0.89~1.04m, 22~260kW)
+                                # 안에서 104kW급(중형)에 해당하는 동급 통상값으로 추정.
   as_of_date: "2026-08"
-  confidence: vendor
-  source_url: "https://www.manualslib.com/manual/1301689/Stulz-Cyberair-3pro-Cw2.html"
+  confidence: projected        # 용량·치수 모두 출처(스캔 PDF)가 재추출 시 값이 달라 미확정
+  source_url: "https://www.manualslib.com/manual/1301689/Stulz-Cyberair-3pro-Cw2.html (스캔본이라 재추출마다 수치가 달라짐 — 확인 불가; 폭/깊이 범위 및 용량범위는 공식 제품페이지 https://www.stulz.com/products/detail/cyberair-3pro-cw/ 기준 추정)"
