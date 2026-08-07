@@ -1,4 +1,7 @@
-"""Streamlit 화면의 사번+비밀번호 로그인 게이트.
+"""Streamlit 화면의 이름+비밀번호 로그인 게이트.
+
+로그인 ID 는 사용자의 실명이다(`[auth.credentials.usernames."홍길동"]`) — 사번이 아니므로
+`secrets.toml` 의 테이블 키도 이름으로 적는다. 실제 이름·해시는 저장소에 두지 않는다.
 
 자격증명은 코드에 두지 않고 `st.secrets["auth"]`(로컬은 `.streamlit/secrets.toml`,
 Streamlit Community Cloud 는 앱 설정의 Secrets)에서만 읽는다.
@@ -69,7 +72,9 @@ def _config_warnings(cfg: dict) -> list[str]:
 
 
 def require_login() -> tuple[str, str]:
-    """로그인된 사용자의 (사번, 이름)을 반환한다. 아니면 화면을 멈춘다.
+    """로그인된 사용자의 (로그인 ID, 표시 이름)을 반환한다. 아니면 화면을 멈춘다.
+
+    로그인 ID 는 실명이므로 보통 두 값이 같다.
 
     Returns:
         (username, name) — 인증 성공 시에만 반환된다.
@@ -99,23 +104,25 @@ def require_login() -> tuple[str, str]:
     status = st.session_state.get("authentication_status")
     if not status:
         st.title("데이터센터 M&E 개념설계")
-        st.caption("사내 공유용 도구입니다. 사번과 비밀번호로 로그인하세요.")
+        st.caption("사내 공유용 도구입니다. 이름과 비밀번호로 로그인하세요.")
         for note in _config_warnings(cfg):
             st.warning(note)
         authenticator.login(location="main",
-                            fields={"Form name": "로그인", "Username": "사번",
+                            fields={"Form name": "로그인", "Username": "이름",
                                     "Password": "비밀번호", "Login": "로그인"})
         status = st.session_state.get("authentication_status")
 
     if status is False:
-        st.error("사번 또는 비밀번호가 올바르지 않습니다.")
+        st.error("이름 또는 비밀번호가 올바르지 않습니다.")
         st.stop()
     if status is None:
-        st.info("사번과 비밀번호를 입력하세요.")
+        st.info("이름과 비밀번호를 입력하세요.")
         st.stop()
 
     username = st.session_state.get("username", "")
     name = st.session_state.get("name", "")
     authenticator.logout("로그아웃", location="sidebar")
-    st.sidebar.caption(f"{name} ({username}) 님으로 접속 중")
+    # 로그인 ID 가 실명이면 둘이 같다 — "조일두 (조일두)" 로 겹쳐 찍지 않는다.
+    who = name if name == username or not username else f"{name} ({username})"
+    st.sidebar.caption(f"{who} 님으로 접속 중")
     return username, name

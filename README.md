@@ -61,14 +61,16 @@ Claude Desktop / Claude Code 등의 MCP 설정에 아래를 추가하면 툴 7�
    (`.streamlit/secrets.toml`은 `.gitignore`에 걸려 있다. 커밋되지 않는다.)
 2. **쿠키 키 생성** — `python -c "import secrets; print(secrets.token_urlsafe(48))"`
    결과를 `[auth.cookie] key`에 붙여 넣는다.
-3. **사용자별 비밀번호 해시 생성** — 사번마다 한 번씩:
+3. **사용자별 비밀번호 해시 생성** — 사람마다 한 번씩:
    ```bash
    python scripts/hash_password.py
    ```
    비밀번호는 화면에 표시되지 않고 셸 히스토리에도 남지 않는다. 출력된 TOML 블록을
    `secrets.toml`에 그대로 붙여 넣는다. 평문 비밀번호를 넣으면 로그인이 되지 않고
    화면에 경고가 뜬다(`auto_hash=False`).
-4. 사용자를 추가·삭제하려면 `[auth.credentials.usernames."<사번>"]` 블록을 넣거나 지운다.
+4. 사용자를 추가·삭제하려면 `[auth.credentials.usernames."<이름>"]` 블록을 넣거나 지운다.
+   로그인 ID는 사용자의 실명이다. 동명이인이 있으면 ID에 소속을 덧붙이고
+   (`"홍길동-설비"`) `name`에는 화면에 띄울 이름을 둔다.
 
 ## Streamlit Community Cloud 배포
 
@@ -128,9 +130,9 @@ Streamlit Cloud 자체 접근 제어와 앱 내부 로그인은 **다른 층**�
 1. **Manage app → Settings → Sharing** 에서 **"Only specific people can view this app"** 선택.
 2. **Invite viewers** 에 사내 이메일을 추가한다. 초대받은 사람은 Google/GitHub 등으로
    Streamlit에 로그인해야 앱 URL에 접근할 수 있다.
-3. 그 뒤 앱 안에서 다시 **사번+비밀번호**로 로그인한다.
+3. 그 뒤 앱 안에서 다시 **이름+비밀번호**로 로그인한다.
 
-Cloud 공유 설정만으로는 초대 목록 관리가 이메일 단위라 사번 추적이 안 되고,
+Cloud 공유 설정만으로는 초대 목록 관리가 이메일 단위라 사용자 추적이 안 되고,
 앱 내부 로그인만으로는 URL이 공개 인터넷에 노출된다. 두 층을 함께 쓰는 이유다.
 
 ### 5. 배포 후 확인

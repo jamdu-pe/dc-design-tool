@@ -22,7 +22,7 @@ APP = str(pathlib.Path(__file__).resolve().parent.parent / "app.py")
 
 
 def _login(at: AppTest) -> AppTest:
-    next(t for t in at.text_input if t.label == "사번").set_value(TEST_USER)
+    next(t for t in at.text_input if t.label == "이름").set_value(TEST_USER)
     next(t for t in at.text_input if t.label == "비밀번호").set_value(TEST_PASSWORD)
     next(b for b in at.button if b.label == "로그인").click().run()
     return at

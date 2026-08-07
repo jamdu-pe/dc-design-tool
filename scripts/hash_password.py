@@ -19,9 +19,9 @@ def main() -> int:
               file=sys.stderr)
         return 2
 
-    username = input("사번(로그인 ID): ").strip()
+    username = input("이름(로그인 ID): ").strip()
     if not username:
-        print("사번이 비어 있습니다.", file=sys.stderr)
+        print("이름이 비어 있습니다.", file=sys.stderr)
         return 2
 
     password = getpass.getpass("비밀번호: ")
@@ -34,7 +34,7 @@ def main() -> int:
 
     print("\n아래 블록을 .streamlit/secrets.toml (또는 Cloud 의 Settings → Secrets)에 붙여넣으세요.\n")
     print(f'[auth.credentials.usernames."{username}"]')
-    print('name = "표시할 이름"')
+    print(f'name = "{username}"')
     print('email = "user@example.com"')
     print(f'password = "{stauth.Hasher.hash(password)}"')
     return 0

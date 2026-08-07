@@ -3,7 +3,7 @@
 최종 갱신: 2026-08-06
 
 ## 한 줄 요약
-엔진·카탈로그·산출물은 동작하며 테스트 333개가 통과한다. Streamlit 웹 UI에 사번
+엔진·카탈로그·산출물은 동작하며 테스트 334개가 통과한다. Streamlit 웹 UI에 실명
 로그인을 붙였고, GitHub(`jamdu-pe/dc-design-tool`, private)에 올렸다.
 **Streamlit Cloud 앱 생성은 아직 남았다.**
 
@@ -101,7 +101,7 @@ sweep:
 
 ### 6. Streamlit Cloud 배포 준비
 - `requirements.txt`(루트), `.streamlit/secrets.toml.example`, `.gitignore` 갱신.
-- `dc_design_tool/ui_auth.py` — 사번+비밀번호 로그인. 자격증명은 `st.secrets`에서만
+- `dc_design_tool/ui_auth.py` — 실명+비밀번호 로그인. 자격증명은 `st.secrets`에서만
   읽고, **설정이 없으면 화면을 열지 않는다(fail closed)**.
 - `scripts/hash_password.py` — bcrypt 해시 생성(입력 가림, 히스토리에 안 남음).
 - README에 로그인 설정 + 배포 절차 5단계.
@@ -118,7 +118,8 @@ sweep:
 | 최초 커밋 | 완료 (`49b9dbd`, 90파일) |
 | GitHub 저장소 생성·push | 완료 (2026-08-06) |
 | share.streamlit.io 앱 생성 | **미완** — 브라우저 작업 |
-| Secrets 설정 | **미완** — 실제 사번·비밀번호 필요 |
+| Secrets 설정 (로컬) | 완료 (2026-08-07) — `.streamlit/secrets.toml`, gitignore |
+| Secrets 설정 (Cloud) | **미완** — 앱 Settings → Secrets 에 같은 내용 붙여넣기 |
 | 뷰어 초대 (Sharing) | **미완** |
 
 절차는 README의 "Streamlit Community Cloud 배포" 절 참고.
@@ -163,7 +164,7 @@ Cloud 배포" 절에 단계별로 있다. 요약:
 
 1. 터미널에서 값 두 개를 만든다
    - 쿠키 키: `python -c "import secrets; print(secrets.token_urlsafe(48))"`
-   - 사용자별 해시: `python scripts/hash_password.py` (사번마다 1회)
+   - 사용자별 해시: `python scripts/hash_password.py` (사람마다 1회, 로그인 ID는 실명)
 2. <https://share.streamlit.io> → New app → `jamdu-pe/dc-design-tool` / `main` / `app.py`
 3. Deploy 전에 Advanced settings → Secrets 에 `[auth.cookie]` + `[auth.credentials…]` 붙여넣기
 4. Settings → Sharing → "Only specific people can view this app" → 사내 이메일 초대

@@ -33,7 +33,7 @@ def _design_ui_visible(at: AppTest) -> bool:
 
 
 def _submit(at: AppTest, user: str, password: str) -> AppTest:
-    next(t for t in at.text_input if t.label == "사번").set_value(user)
+    next(t for t in at.text_input if t.label == "이름").set_value(user)
     next(t for t in at.text_input if t.label == "비밀번호").set_value(password)
     next(b for b in at.button if b.label == "로그인").click().run()
     return at
@@ -68,7 +68,7 @@ def test_empty_user_list_is_treated_as_unconfigured():
 def test_login_form_is_shown_before_authentication():
     at = _app(auth_secrets())
     assert not at.exception, at.exception
-    assert {"사번", "비밀번호"} <= {t.label for t in at.text_input}
+    assert {"이름", "비밀번호"} <= {t.label for t in at.text_input}
     assert not _design_ui_visible(at)
 
 
@@ -79,8 +79,8 @@ def test_wrong_password_does_not_open_the_design_ui():
     assert any("올바르지 않습니다" in e.value for e in at.error)
 
 
-def test_unknown_employee_number_does_not_open_the_design_ui():
-    at = _submit(_app(auth_secrets()), "99999999", TEST_PASSWORD)
+def test_unknown_name_does_not_open_the_design_ui():
+    at = _submit(_app(auth_secrets()), "등록되지않은사람", TEST_PASSWORD)
     assert not _design_ui_visible(at)
 
 
@@ -95,6 +95,19 @@ def test_signed_in_user_is_shown_and_can_log_out():
     captions = " ".join(c.value for c in at.sidebar.caption)
     assert TEST_USER in captions and TEST_NAME in captions
     assert any(b.label == "로그아웃" for b in at.sidebar.button)
+
+
+def test_caption_does_not_repeat_identical_name_and_id():
+    """로그인 ID 가 실명이면 이름과 ID 가 같다 — '홍길동 (홍길동)' 으로 겹쳐 찍지 않는다."""
+    same = "홍길동"
+    secrets = auth_secrets()
+    entry = secrets["credentials"]["usernames"].pop(TEST_USER)
+    secrets["credentials"]["usernames"][same] = {**entry, "name": same}
+
+    at = _submit(_app(secrets), same, TEST_PASSWORD)
+    captions = " ".join(c.value for c in at.sidebar.caption)
+    assert f"{same} 님으로 접속 중" in captions
+    assert f"{same} ({same})" not in captions
 
 
 # ---------- 설정 품질 경고 ----------
