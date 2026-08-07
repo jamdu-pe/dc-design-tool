@@ -137,3 +137,10 @@ def test_rack_form_rejects_duplicate_id():
     next(b for b in at.button if "카탈로그에 추가" in b.label).click().run()
     assert not at.exception, at.exception
     assert any("중복 블록 id" in e.value for e in at.error)
+
+
+def test_sidebar_default_rack_is_representative_model():
+    """첫 화면 기본 랙은 정렬 첫 항목이 아니라 대표 모델(GB200)이다."""
+    at = _fresh()
+    rack = next(s for s in at.sidebar.selectbox if s.label == "랙 모델")
+    assert rack.value == "nvidia_gb200_nvl72"

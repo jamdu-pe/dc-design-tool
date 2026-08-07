@@ -95,6 +95,9 @@ EQUIPMENT_GROUPS = [
     ("통신", [("leaf", "Leaf 스위치"), ("spine", "Spine 스위치"),
               ("transceiver", "트랜시버")]),
 ]
+# 첫 화면 기본 랙(대표 모델). 카탈로그에 없으면 목록 첫 항목으로 폴백한다.
+DEFAULT_RACK = "nvidia_gb200_nvl72"
+
 EQUIPMENT_KEY = "sel_%s"        # 역할별 위젯 키
 
 
@@ -130,8 +133,10 @@ def _catalog() -> dict:
     """카탈로그를 (표시용으로) 캐싱해 읽는다. 랙 등록 후에는 캐시를 비운다."""
     blocks = load_blocks()
     racks = {bid: b for bid, b in blocks.items() if b.type == "rack"}
+    options = sorted(racks)
     return {
-        "rack_options": sorted(racks),
+        "rack_options": options,
+        "default_rack": DEFAULT_RACK if DEFAULT_RACK in racks else options[0],
         "rack_labels": {bid: f"{b.vendor} {b.model} · {b.interface.power_kw_typical}kW "
                              f"[{b.confidence}]" for bid, b in racks.items()},
         "tiers": list(load_rule("tiers.yaml")["tiers"]),
@@ -165,6 +170,7 @@ region = st.sidebar.selectbox(
     index=cat["regions"].index("generic") if "generic" in cat["regions"] else 0,
     format_func=lambda c: f"{c} — {cat['region_names'][c]}")
 rack_id = st.sidebar.selectbox("랙 모델", cat["rack_options"],
+                               index=cat["rack_options"].index(cat["default_rack"]),
                                format_func=lambda b: cat["rack_labels"][b])
 
 mode = st.sidebar.radio("규모 입력", ["IT 부하 (MW)", "랙 수"], horizontal=True)
