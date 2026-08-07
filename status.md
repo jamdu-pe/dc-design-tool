@@ -1,22 +1,25 @@
 # 작업 현황
 
-최종 갱신: 2026-08-06
+최종 갱신: 2026-08-07
 
 ## 한 줄 요약
-엔진·카탈로그·산출물은 동작하며 테스트 334개가 통과한다. Streamlit 웹 UI에 실명
-로그인을 붙였고, GitHub(`jamdu-pe/dc-design-tool`, private)에 올렸다.
+엔진·카탈로그·산출물은 동작하며 테스트 360개가 통과한다. 공냉 잔열 처리 장비가
+`air_cooling` 역할로 BOM·규격검증에 들어왔고, 기본 장비 선택은 YAML 순서가 아니라
+`default` 플래그가 정한다. Streamlit 웹 UI에 실명 로그인을 붙였고,
+GitHub(`jamdu-pe/dc-design-tool`, private)에 올렸다.
 **Streamlit Cloud 앱 생성은 아직 남았다.**
 
 ## 테스트
 ```
-pytest -q   → 333 passed
+pytest -q   → 360 passed
 ```
 | 영역 | 파일 | 비고 |
 |---|---|---|
 | 골든 회귀 | `test_golden_gb200.py` | GB200 NVL72 앵커값 |
 | 엔진 | `test_it_load / cooling / power / space / network / compose / scenario` | |
 | 규격검증 | `test_compliance*.py`, `test_region.py` | |
-| 장비 교체 | `test_selection.py` (22) | 2026-08-06 추가 |
+| 장비 교체 | `test_selection.py` (31) | 2026-08-06 신설, 2026-08-07 공냉 후보 검증 추가 |
+| 공냉 역할 | `test_cooling.py` / `test_selection.py` / `test_compliance.py` | 2026-08-07 추가 |
 | 산출물·CLI·MCP | `test_reports / diagram / cli / compare_cli / mcp_server` | |
 | 웹 UI | `test_app.py` (12) | 로그인을 거쳐 검증 |
 | 로그인 게이트 | `test_auth.py` (11) | 2026-08-06 추가 |
@@ -108,6 +111,51 @@ sweep:
 - 설치 없이 저장소 루트에서 `import dc_design_tool`이 잡히는지 검증 완료
   (Cloud가 `requirements.txt`만으로 동작하는 전제).
 
+## 최근 작업 (2026-08-07)
+
+### 1. 기본 장비 선택을 `default` 플래그로 — YAML 순서 의존 제거
+`Block.default: bool`을 추가했다. `selections`로 지정하지 않은 역할은 이제 YAML의
+첫 줄이 아니라 `default: true`가 붙은 후보를 쓴다. 줄 순서는 표시 순서일 뿐이다.
+역할마다 플래그는 정확히 하나여야 하며 `tests/test_selection.py`가 강제한다.
+`data/*.yaml`의 줄 순서를 바꿔도 설계 결과가 더 이상 바뀌지 않는다.
+
+### 2. 공냉 역할 `air_cooling` 신설
+`Interface`에 `mounting`(`rack`|`room`, 기본 `room`)과 `method`(표시용 라벨)를
+추가하고, 새 교체 역할 `air_cooling`을 냉각 엔진에 연결했다. IT 발열 중 액냉이
+못 받는 잔열(`air_kw`)을 처리할 장비가 이제 BOM에 실제로 잡힌다(`rdhx_60kw`가
+카탈로그에만 있고 아무도 안 쓰던 문제 해결). 수량 산정은 `interface.mounting`으로
+갈린다 — `rack`(랙 후면 장착, 예: RDHx)은 랙당 1대·이중화 배수 없음(여분 도어를
+매달 수 없다), `room`(실 단위 설치, 예: CRAH)은 CDU·칠러와 같은 `calc.redundant_qty`
+이중화 규칙을 쓴다. 랙당 공냉 부하(`rack_air_kw`)도 결과에 실린다.
+
+### 3. 공냉 교체 후보 3종 추가
+벤더 데이터시트 기준으로 `rdhx_motivair_chilleddoor_m16`(랙, 75kW, `confidence:
+vendor`), `crah_vertiv_liebert_crv040`(실, 42.9kW, `confidence: vendor`),
+`crah_stulz_cyberair3pro_cw2_1280`(실, 103.9kW, `confidence: projected` — 출처가
+스캔 PDF라 재추출할 때마다 수치가 달라 용량·치수를 확정 못 함, 근거는 소스 주석에
+명기)를 추가했다. 기본값은 그대로 `rdhx_60kw`.
+
+### 4. 공냉 규격검증 2건 추가
+`AIR_COOLING_RACK_CAPACITY`(랙 장착형 전용 — 부족하면 대수를 늘려도 랙당 용량이
+그대로라 `violation`)와 `REDUNDANCY_EFFECTIVE_AIR_COOLING`(실 장착형 전용 — 기존
+잔여용량 검증에 합류)을 추가했다. 두 판정은 `mounting`에 따라 상호 배타적이다.
+
+### 5. 화면·계통도·설계기준서·CLI에 공냉 노출
+Streamlit 화면 `장비 교체` 패널, mermaid 계통도, Word 설계기준서, CLI 요약 모두에
+공냉 대수·방식을 띄웠다. 계통도에서 하드코딩돼 있던 `"(CRAH/RDHx)"` 추정 라벨을
+지우고 실제 선택된 `air_cooling_method` 값을 쓰도록 고쳤다.
+
+### 6. 사이드바 기본 랙을 대표 모델(GB200)로
+정렬상 첫 항목(`aws_trainium3_ultraserver_rack`)이 아니라 대표 모델
+`nvidia_gb200_nvl72`를 기본값으로 지정했다(카탈로그에 없으면 목록 첫 항목으로
+안전하게 폴백).
+
+### 7. Windows 콘솔 인코딩 방어
+cp949 콘솔에서 CLI 출력 중 em-dash·`≈` 등을 만나면 `UnicodeEncodeError`로 죽던
+문제를 CLI 진입점의 스트림 오류 처리기만 `errors="replace"`로 완화해 고쳤다.
+인코딩 자체는 건드리지 않아 한글은 그대로 나오고, 깨지는 글자만 `?`로 바뀐다.
+`-X utf8` 없이도 CLI가 예외 없이 끝난다.
+
 ## 배포 상태
 
 원격: `https://github.com/jamdu-pe/dc-design-tool.git` (private)
@@ -139,28 +187,26 @@ sweep:
 - Cloud 공유 설정(Sharing)과 앱 내부 로그인은 다른 층이다. 둘 다 켜야 한다.
 
 ### 코드 관련
-- **YAML 순서가 기본 설계를 결정한다.** `selections` 미지정 시 해당 subtype의 첫 블록을
-  쓴다. `data/*.yaml`에서 기존 블록 **앞에** 새 블록을 끼워 넣으면 모든 결과가 조용히
-  바뀐다. 세 파일 상단에 경고 주석이 있으나 코드가 막지는 않는다.
+- **기본 설계는 `default: true` 플래그가 정한다.** `selections` 미지정 시 해당
+  subtype에서 `default: true`가 붙은 블록을 쓴다. `data/*.yaml`의 줄 순서는 표시
+  순서일 뿐이며, 새 블록을 기존 블록 앞에 끼워 넣어도 설계 결과는 바뀌지 않는다.
+  역할마다 플래그가 정확히 하나인지는 `tests/test_selection.py`가 강제한다.
 - `capex_usd`를 가진 블록이 0개라 `scenario`의 CAPEX 비교가 항상 "비용 미상"이다.
   공개 데이터시트에 단가가 없어 견적 등 별도 경로로만 채울 수 있다.
-- `rdhx_60kw`(rear_door_hx)는 카탈로그에만 있고 어떤 엔진도 소비하지 않는다.
-- **사이드바 기본 랙은 목록 정렬상 첫 항목(`aws_trainium3_ultraserver_rack`)이다.**
-  대표 모델(GB200)이 아니므로 첫 화면 수치가 의외로 보일 수 있다.
-- Windows 기본 콘솔(cp949)에서 CLI 출력이 `UnicodeEncodeError`로 깨진다
-  (규격검증 메시지의 em-dash). `python -X utf8` 로는 정상. 기존 이슈.
 
 ### 다음 후보
 1. Streamlit Cloud 앱 생성 → Secrets → 뷰어 초대 (브라우저 작업)
-2. `rdhx_60kw` 를 냉각 엔진에 연결하거나 카탈로그에서 제거
-3. 사이드바 기본 랙을 대표 모델(GB200)로 지정
+2. `capex_usd` 출처 확보 — 공개 데이터시트에 단가가 없어 견적 등 별도 경로가 필요하다.
 
 ## 다음 세션 시작점
 
-코드 쪽은 일단락됐다. `main` 이 원격과 같고 `pytest -q` 는 333개 통과한다.
+코드 쪽은 일단락됐다. 공냉 역할(`air_cooling`) 신설과 `default` 플래그 전환을 마쳤고
+`pytest -q` 는 360개 통과한다. 이번 작업분은 `worktree-air-cooling-role` 브랜치에
+있으며, main 에 합치는 절차가 아직 남아 있다.
 
-**남은 것은 배포뿐이며 전부 브라우저 작업이다.** 절차는 README "Streamlit Community
-Cloud 배포" 절에 단계별로 있다. 요약:
+**남은 것은 사실상 배포뿐이며 대부분 브라우저 작업이다** (코드 쪽 잔여 항목은
+`capex_usd` 출처 확보 하나뿐 — 아래 "다음 후보" 2번 참고). 배포 절차는 README
+"Streamlit Community Cloud 배포" 절에 단계별로 있다. 요약:
 
 1. 터미널에서 값 두 개를 만든다
    - 쿠키 키: `python -c "import secrets; print(secrets.token_urlsafe(48))"`
@@ -173,4 +219,5 @@ Cloud 배포" 절에 단계별로 있다. 요약:
 
 Secrets 를 빠뜨려도 설계 화면이 공개되지는 않는다(안내만 띄우고 멈춘다).
 
-코드 작업을 다시 잡는다면 위 "다음 후보" 2·3번이 가장 작고 독립적이다.
+코드 작업을 다시 잡는다면 위 "다음 후보" 2번(`capex_usd` 출처 확보)이 남은 전부다 —
+견적 등 별도 경로를 확보하기 전까지는 계속 "비용 미상"으로 보고하는 게 맞다.
