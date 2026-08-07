@@ -51,8 +51,8 @@ def list_candidates(type_: str, subtype: str,
                     blocks: Optional[dict[str, Block]] = None) -> list[Block]:
     """해당 역할을 맡을 수 있는 블록 후보를 카탈로그 등재 순서대로 반환한다.
 
-    맨 앞([0])이 기본값이다. `data/*.yaml` 안의 순서가 곧 기본 선택이므로,
-    기존 블록보다 앞에 새 블록을 끼워 넣으면 설계 결과가 바뀐다.
+    순서는 표시 순서일 뿐이고, 기본 선택은 `default: true` 플래그가 정한다
+    (`resolve` 참고).
 
     조건에 맞는 블록이 없으면 예외가 아니라 빈 목록을 준다(UI 가 "후보 없음"을
     그릴 수 있어야 한다). 실제 사용 시점의 부재 판정은 `resolve`가 한다.
@@ -64,7 +64,11 @@ def list_candidates(type_: str, subtype: str,
 
 def resolve(type_: str, subtype: str, blocks: dict[str, Block],
             selections: Optional[dict[str, str]] = None) -> Block:
-    """역할에 쓸 블록을 정한다. 선택이 있으면 그것을, 없으면 첫 후보를 쓴다.
+    """역할에 쓸 블록을 정한다. 선택이 있으면 그것을, 없으면 기본 블록을 쓴다.
+
+    기본 블록은 `default: true` 가 붙은 후보다. 플래그가 하나도 없으면 첫 후보로
+    폴백한다(테스트가 주입하는 임시 카탈로그를 위한 것이며, 배포 카탈로그는
+    tests/test_selection.py 가 모든 역할에 플래그를 강제한다).
 
     블록을 고르기만 하고 어떤 계산도 하지 않는다. 수량·용량은 호출한 도메인
     엔진이 `calc.*` 로 재산정한다(CLAUDE.md 절대규칙 1).
@@ -73,7 +77,7 @@ def resolve(type_: str, subtype: str, blocks: dict[str, Block],
         type_: 블록 종류(cooling|electrical|network).
         subtype: 역할(ups, cdu, leaf 등).
         blocks: 카탈로그.
-        selections: 역할 → block_id. 해당 역할 키가 없으면 기본값을 쓴다.
+        selections: 역할 → block_id. 해당 역할 키가 없으면 기본 블록을 쓴다.
 
     Raises:
         KeyError: 후보가 하나도 없거나, 지정한 id 가 없거나, 그 id 의 역할이
@@ -86,7 +90,7 @@ def resolve(type_: str, subtype: str, blocks: dict[str, Block],
 
     chosen_id = (selections or {}).get(subtype)
     if not chosen_id:
-        return candidates[0]
+        return next((b for b in candidates if b.default), candidates[0])
 
     for block in candidates:
         if block.id == chosen_id:

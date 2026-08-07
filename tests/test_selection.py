@@ -172,3 +172,44 @@ def test_candidates_are_json_serializable():
     """MCP·웹 UI 응답에 그대로 실린다."""
     import json
     json.dumps(size(_spec()).candidates, ensure_ascii=False)
+
+
+# ---------- default 플래그 (YAML 순서 의존 제거) ----------
+
+def test_every_selectable_role_has_exactly_one_default():
+    """배포 카탈로그의 모든 역할에 기본 블록이 정확히 하나여야 한다.
+
+    이 테스트가 있어야 `resolve()` 의 '첫 후보' 폴백 경로가 실제 설계에서 쓰이지
+    않는다. 새 역할을 추가하면 여기서 먼저 걸린다.
+    """
+    blocks = load_blocks()
+    for role, type_ in SELECTABLE_ROLES.items():
+        flagged = [b.id for b in list_candidates(type_, role, blocks) if b.default]
+        assert len(flagged) == 1, f"역할 '{role}' 의 default 블록: {flagged}"
+
+
+def test_resolve_prefers_default_flag_over_yaml_order():
+    """플래그가 붙은 블록이 등재 순서를 이긴다."""
+    blocks = load_blocks()
+    first, second = list_candidates("electrical", "ups", blocks)[:2]
+    moved = dict(blocks)
+    moved[first.id] = first.model_copy(update={"default": False})
+    moved[second.id] = second.model_copy(update={"default": True})
+    assert resolve("electrical", "ups", moved).id == second.id
+
+
+def test_resolve_falls_back_to_first_when_no_flag():
+    """플래그가 하나도 없으면 기존대로 첫 후보. 주입 카탈로그(테스트용)를 위한 폴백."""
+    blocks = load_blocks()
+    unflagged = {bid: b.model_copy(update={"default": False})
+                 for bid, b in blocks.items()}
+    expected = list_candidates("cooling", "chiller", unflagged)[0].id
+    assert resolve("cooling", "chiller", unflagged).id == expected
+
+
+def test_candidate_table_marks_flagged_block_as_default():
+    """UI 후보표의 is_default 도 인덱스가 아니라 플래그를 본다."""
+    result = size(_spec())
+    for role in SELECTABLE_ROLES:
+        marked = [c["id"] for c in result.candidates[role] if c["is_default"]]
+        assert len(marked) == 1, f"{role}: {marked}"

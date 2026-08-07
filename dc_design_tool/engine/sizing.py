@@ -58,18 +58,19 @@ def merge_selections(spec: Spec,
 
 def _candidate_table(blocks: dict[str, Block],
                      selections: dict[str, str]) -> dict[str, list[dict]]:
-    """역할별 후보 목록(UI 드롭다운용). 카탈로그 등재 순서를 그대로 쓴다."""
+    """역할별 후보 목록(UI 드롭다운용). 표시 순서는 카탈로그 등재 순서를 쓰고,
+    기본값 표시는 `default` 플래그를 따른다(플래그가 없으면 첫 후보)."""
     table: dict[str, list[dict]] = {}
     for role, type_ in SELECTABLE_ROLES.items():
-        rows = []
-        for index, b in enumerate(list_candidates(type_, role, blocks)):
-            rows.append({
-                "id": b.id, "vendor": b.vendor, "model": b.model,
-                "capacity": _capacity_label(b), "confidence": b.confidence,
-                "is_default": index == 0,
-                "is_selected": b.id == selections.get(role),
-            })
-        table[role] = rows
+        candidates = list_candidates(type_, role, blocks)
+        default_id = next((b.id for b in candidates if b.default),
+                          candidates[0].id if candidates else None)
+        table[role] = [{
+            "id": b.id, "vendor": b.vendor, "model": b.model,
+            "capacity": _capacity_label(b), "confidence": b.confidence,
+            "is_default": b.id == default_id,
+            "is_selected": b.id == selections.get(role),
+        } for b in candidates]
     return table
 
 

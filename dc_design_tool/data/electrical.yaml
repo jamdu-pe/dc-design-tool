@@ -1,12 +1,13 @@
 # 전기 장비 카탈로그 (type=electrical)
 #
-# [순서 주의] engine 이 아직 `_first()`(해당 subtype 의 첫 블록)로 장비를 고른다.
-# 각 subtype 의 기존 기본 블록을 맨 앞에 두고 신규 후보는 뒤에 붙일 것.
-# 순서를 바꾸면 모든 설계 결과가 조용히 바뀐다. (선정 엔진 도입 시 이 제약은 사라진다)
+# [기본 블록] 각 subtype 의 기본 선택은 `default: true` 플래그가 정한다. 줄 순서는
+# 표시 순서일 뿐이며 설계 결과를 바꾸지 않는다. 역할마다 플래그는 정확히 하나여야 하고,
+# tests/test_selection.py 가 이를 강제한다.
 #
 # [footprint_m2 주의] 신규 벤더 블록의 정격은 데이터시트 확인값이지만, footprint_m2 는
 # 치수를 확인하지 못해 동급 장비 통상값으로 넣었다. 전기실 면적 산정에 직접 영향을 준다.
 - id: ups_1250kva
+  default: true                # 이 역할의 기본 블록 (줄 순서가 아니라 이 플래그가 정한다)
   type: electrical
   subtype: ups
   vendor: Generic
@@ -21,6 +22,7 @@
   source_url: "generic-industry-typical"
 
 - id: genset_2500kw
+  default: true                # 이 역할의 기본 블록 (줄 순서가 아니라 이 플래그가 정한다)
   type: electrical
   subtype: generator
   vendor: Generic
@@ -34,6 +36,7 @@
   source_url: "generic-industry-typical"
 
 - id: tx_2500kva
+  default: true                # 이 역할의 기본 블록 (줄 순서가 아니라 이 플래그가 정한다)
   type: electrical
   subtype: transformer
   vendor: Generic
@@ -48,6 +51,7 @@
   source_url: "generic-industry-typical"
 
 - id: battery_cabinet_200kwh
+  default: true                # 이 역할의 기본 블록 (줄 순서가 아니라 이 플래그가 정한다)
   type: electrical
   subtype: battery
   vendor: Generic
@@ -60,6 +64,7 @@
   source_url: "generic-industry-typical"
 
 - id: pdu_rack_50kw
+  default: true                # 이 역할의 기본 블록 (줄 순서가 아니라 이 플래그가 정한다)
   type: electrical
   subtype: pdu
   vendor: Generic
@@ -73,6 +78,7 @@
   source_url: "generic-industry-typical"
 
 - id: busway_800a
+  default: true                # 이 역할의 기본 블록 (줄 순서가 아니라 이 플래그가 정한다)
   type: electrical
   subtype: busway
   vendor: Generic

@@ -55,6 +55,10 @@ class Block(BaseModel):
     subtype: Optional[str] = None
     interface: Interface
     composed_of: list[Component] = Field(default_factory=list)
+    # 역할(subtype) 안에서 이 블록이 기본 선택인가. selections 로 지정하지 않은 역할에
+    # 무엇을 쓸지는 YAML 줄 순서가 아니라 이 플래그가 정한다.
+    # 역할마다 정확히 하나만 true 여야 한다(tests/test_selection.py 가 강제).
+    default: bool = False
     as_of_date: Optional[str] = None
     confidence: Confidence = "projected"
     source_url: Optional[str] = None

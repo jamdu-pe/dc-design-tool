@@ -1,13 +1,14 @@
 # 냉각 장비 카탈로그 (type=cooling). capacity_kw = 열제거 능력
 #
-# [순서 주의] engine 이 아직 `_first()`(해당 subtype 의 첫 블록)로 장비를 고른다.
-# 각 subtype 의 기존 기본 블록을 맨 앞에 두고 신규 후보는 뒤에 붙일 것.
-# 순서를 바꾸면 모든 설계 결과가 조용히 바뀐다. (선정 엔진 도입 시 이 제약은 사라진다)
+# [기본 블록] 각 subtype 의 기본 선택은 `default: true` 플래그가 정한다. 줄 순서는
+# 표시 순서일 뿐이며 설계 결과를 바꾸지 않는다. 역할마다 플래그는 정확히 하나여야 하고,
+# tests/test_selection.py 가 이를 강제한다.
 #
 # [footprint_m2 주의] 신규 벤더 블록의 capacity 는 데이터시트 확인값이지만,
 # footprint_m2 는 데이터시트 치수를 확인하지 못해 동급 장비 통상값으로 넣었다.
 # 공간 엔진(부속실 면적)에 직접 영향을 주므로 실시설계 전 실측 치수로 교체할 것.
 - id: cdu_liquid_1300kw
+  default: true                # 이 역할의 기본 블록 (줄 순서가 아니라 이 플래그가 정한다)
   type: cooling
   subtype: cdu                 # Coolant Distribution Unit (액-액)
   vendor: Generic
@@ -35,6 +36,7 @@
   source_url: "generic-industry-typical"
 
 - id: chiller_1000rt
+  default: true                # 이 역할의 기본 블록 (줄 순서가 아니라 이 플래그가 정한다)
   type: cooling
   subtype: chiller
   vendor: Generic
