@@ -83,8 +83,8 @@ def size(spec: Spec, blocks: Optional[dict] = None,
         spec: 요구사항.
         blocks: 카탈로그 주입(미지정 시 `data/*.yaml` 로드). 시나리오 비교·테스트용.
         selections: 역할(subtype) → block_id. `spec.selections` 위에 얹히며 역할
-            단위로 이쪽이 이긴다. 지정하지 않은 역할은 카탈로그 첫 후보를 쓴다.
-            장비를 바꿔도 수량·용량은 각 도메인 엔진이 `calc.*` 로 재산정한다
+            단위로 이쪽이 이긴다. 지정하지 않은 역할은 `default: true`가 붙은
+            블록을 쓴다. 장비를 바꿔도 수량·용량은 각 도메인 엔진이 `calc.*` 로 재산정한다
             (CLAUDE.md 절대규칙 1). 가능한 역할은 `SELECTABLE_ROLES` 참고.
 
     Raises:

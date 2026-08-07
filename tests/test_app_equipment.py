@@ -17,7 +17,7 @@ from tests.auth_fixtures import TEST_PASSWORD, TEST_USER, auth_secrets  # noqa: 
 
 APP = str(pathlib.Path(__file__).resolve().parent.parent / "app.py")
 
-ROLE_LABELS = ["CDU", "칠러", "UPS", "배터리", "발전기", "변압기",
+ROLE_LABELS = ["CDU", "칠러", "공냉장비", "UPS", "배터리", "발전기", "변압기",
                "랙 PDU", "버스웨이", "Leaf 스위치", "Spine 스위치", "트랜시버"]
 
 
@@ -72,7 +72,7 @@ def test_picker_options_carry_vendor_model_and_confidence():
     assert "projected" in " | ".join(_picker(at, "칠러").options)
 
 
-def test_pickers_default_to_the_catalog_first_candidate():
+def test_pickers_default_to_the_default_flagged_block():
     at = _after_design_run()
     assert _picker(at, "CDU").value == "cdu_liquid_1300kw"
     assert _picker(at, "UPS").value == "ups_1250kva"

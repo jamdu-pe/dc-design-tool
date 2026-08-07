@@ -27,11 +27,19 @@ def test_list_candidates_returns_only_matching_role():
     assert all(b.type == "electrical" and b.subtype == "ups" for b in ups)
 
 
-def test_list_candidates_first_is_current_default():
-    """[0]이 곧 기본값이다. 이 순서가 바뀌면 모든 설계 결과가 바뀐다."""
-    assert list_candidates("electrical", "ups")[0].id == "ups_1250kva"
-    assert list_candidates("cooling", "cdu")[0].id == "cdu_liquid_1300kw"
-    assert list_candidates("network", "leaf")[0].id == "leaf_switch_64x800g"
+def test_default_flagged_block_is_current_default():
+    """`default: true` 가 곧 기본값이다. 이 플래그가 바뀌면 모든 설계 결과가
+    바뀐다 — 카탈로그 등재 순서(YAML 안 위치)는 더 이상 기본값을 정하지 않으므로
+    새 블록을 파일 맨 위에 끼워 넣어도 이 테스트는 깨지지 않아야 한다."""
+    blocks = load_blocks()
+    for type_, role, expected_id in [
+        ("electrical", "ups", "ups_1250kva"),
+        ("cooling", "cdu", "cdu_liquid_1300kw"),
+        ("network", "leaf", "leaf_switch_64x800g"),
+    ]:
+        flagged = [b.id for b in list_candidates(type_, role, blocks) if b.default]
+        assert flagged == [expected_id]
+        assert resolve(type_, role, blocks).id == expected_id
 
 
 def test_list_candidates_unknown_role_returns_empty_not_error():
@@ -46,7 +54,7 @@ def test_list_candidates_accepts_injected_blocks():
 
 # ---------- resolve ----------
 
-def test_resolve_without_selection_returns_first_candidate():
+def test_resolve_without_selection_returns_the_default_flagged_block():
     blocks = load_blocks()
     assert resolve("electrical", "ups", blocks).id == "ups_1250kva"
 

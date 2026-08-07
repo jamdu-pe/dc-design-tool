@@ -201,7 +201,8 @@ Cloud 공유 설정만으로는 초대 목록 관리가 이메일 단위라 사�
 ## 확장 방법 (코드 수정 없음)
 - 신규 장비: `dc_design_tool/data/*.yaml`에 블록 추가(`as_of_date`·`confidence`·`source_url` 필수).
 - 장비 교체: `spec.yaml`에 `selections:`(역할 → block_id)를 적으면 CLI·시나리오 비교·MCP에
-  모두 반영된다. 웹 UI는 `장비 교체` 패널에서 고른다. 안 적은 역할은 카탈로그 첫 후보를 쓴다.
+  모두 반영된다. 웹 UI는 `장비 교체` 패널에서 고른다. 안 적은 역할은 `default: true`가
+  붙은 블록을 쓴다.
   후보 확인은 `dc-design catalog --type electrical --subtype ups`.
 - 설계 계수: `dc_design_tool/rules/*.yaml` 수정
   (`redundancy` 이중화, `electrical` 역률·하우스부하·배전손실·고조파·자립시간·버스웨이 표준,

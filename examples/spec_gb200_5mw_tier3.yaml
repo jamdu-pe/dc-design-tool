@@ -9,7 +9,8 @@ target_pue: 1.25
 ambient_design_c: 33
 climate: "KR-Busan"
 
-# 장비를 바꾸려면 역할(subtype) → block_id 를 적는다. 안 적은 역할은 카탈로그 첫 후보.
+# 장비를 바꾸려면 역할(subtype) → block_id 를 적는다. 안 적은 역할은 `default: true`가
+# 붙은 블록을 쓴다.
 # 쓸 수 있는 id 는 `dc-design catalog --type electrical --subtype ups` 로 확인한다.
 # selections:
 #   ups: ups_vertiv_exl_s1_800kva

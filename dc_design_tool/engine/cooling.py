@@ -99,10 +99,10 @@ def size_cooling(it_kw: float, rack: Block, spec: Spec, blocks: dict[str, Block]
                  unit_capacity=f"{cdu.interface.capacity_kw}kW", qty=n_cdu,
                  note=spec.mechanical_redundancy),
         LineItem(domain="기계", item="칠러", model=chiller.model, block_id=chiller.id,
-                 unit_capacity=f"{int(chiller.interface.capacity_kw)}kW", qty=n_chiller,
+                 unit_capacity=f"{chiller.interface.capacity_kw:g}kW", qty=n_chiller,
                  note=spec.mechanical_redundancy),
         LineItem(domain="기계", item="공냉장비", model=air.model, block_id=air.id,
-                 unit_capacity=f"{int(air.interface.capacity_kw)}kW", qty=n_air,
+                 unit_capacity=f"{air.interface.capacity_kw:g}kW", qty=n_air,
                  note=air_note),
     ]
     return result, bom

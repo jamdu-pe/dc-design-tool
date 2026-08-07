@@ -102,7 +102,7 @@ EQUIPMENT_KEY = "sel_%s"        # 역할별 위젯 키
 
 
 def _selected_equipment() -> dict[str, str]:
-    """사용자가 고른 역할별 블록. 안 고른 역할은 빼서 엔진 기본값(첫 후보)에 맡긴다."""
+    """사용자가 고른 역할별 블록. 안 고른 역할은 빼서 엔진 기본값(`default: true`)에 맡긴다."""
     picked = {}
     for role in SELECTABLE_ROLES:
         value = st.session_state.get(EQUIPMENT_KEY % role)
@@ -115,7 +115,7 @@ def _reset_equipment() -> None:
     """위젯 키를 지워 모든 역할을 카탈로그 기본값으로 되돌린다.
 
     on_click 콜백은 스크립트 재실행 **전에** 돌므로, 위젯이 다시 만들어질 때
-    session_state 가 비어 있어 기본값(첫 후보)이 잡힌다.
+    session_state 가 비어 있어 기본값(`default: true`가 붙은 블록)이 잡힌다.
     """
     for role in SELECTABLE_ROLES:
         st.session_state.pop(EQUIPMENT_KEY % role, None)

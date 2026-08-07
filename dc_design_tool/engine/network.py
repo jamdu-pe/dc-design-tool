@@ -80,8 +80,8 @@ def size_network(rack_count: int, rack: Block, spec: Optional[Spec],
 
     Args:
         selections: 역할 → block_id. `leaf`·`spine`·`transceiver` 를 교체할 수
-            있다. 미지정 역할은 카탈로그 첫 후보를 쓴다. 교체해도 대수·링크 수는
-            위 순수 함수들로 재산정한다.
+            있다. 미지정 역할은 `default: true`가 붙은 블록을 쓴다. 교체해도
+            대수·링크 수는 위 순수 함수들로 재산정한다.
 
     Raises:
         KeyError: leaf/spine/트랜시버 블록이 카탈로그에 없거나 선택한 id 가
