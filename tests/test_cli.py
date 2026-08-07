@@ -1,5 +1,7 @@
 """CLI 테스트 (Phase 5): build / check / catalog."""
+import io
 import pathlib
+import sys
 
 import pytest
 import yaml
@@ -142,3 +144,30 @@ def test_subcommands_are_addressable_by_name(cmd):
     """단일 커맨드일 때 typer가 이름을 삼키는 문제 방지 회귀 테스트."""
     res = runner.invoke(app, [cmd, "--help"])
     assert res.exit_code == 0
+
+
+# ---------- 콘솔 인코딩 ----------
+
+def test_harden_console_survives_cp949_unencodable_chars(tmp_path, monkeypatch):
+    """cp949 콘솔에서 em-dash·≈ 가 섞여도 죽지 않는다(한글은 그대로 나온다)."""
+    from dc_design_tool.cli import _harden_console
+
+    path = tmp_path / "console.txt"
+    stream = io.TextIOWrapper(path.open("wb"), encoding="cp949")
+    monkeypatch.setattr(sys, "stdout", stream)
+
+    _harden_console()
+    print("규격검증 — 위반 0건 / 1000RT ≈ 3517kW")   # 예외가 나면 실패다
+    stream.flush()
+
+    written = path.read_text(encoding="cp949")
+    assert "규격검증" in written and "위반 0건" in written
+
+
+def test_harden_console_tolerates_stream_without_reconfigure(monkeypatch):
+    """reconfigure 가 없는 스트림(파이프·캡처)에서도 조용히 넘어간다."""
+    from dc_design_tool.cli import _harden_console
+
+    monkeypatch.setattr(sys, "stdout", io.StringIO())
+    monkeypatch.setattr(sys, "stderr", io.StringIO())
+    _harden_console()      # 예외 없이 끝나야 한다

@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import pathlib
+import sys
 from typing import Optional
 
 import typer
@@ -23,6 +24,29 @@ from .reports.diagram_mermaid import write_diagrams
 app = typer.Typer(add_completion=False, help="데이터센터 M&E 개념설계 도구")
 
 SEVERITY_LABEL = {"violation": "위반", "warning": "경고", "info": "정보"}
+
+
+def _harden_console() -> None:
+    """콘솔이 인코딩하지 못하는 문자로 CLI 가 죽지 않게 한다.
+
+    Windows 기본 콘솔(cp949)은 em-dash(—)·≈ 를 인코딩하지 못해
+    UnicodeEncodeError 를 낸다. 한글은 cp949 로 정상 인코딩되므로 **콘솔 인코딩은
+    그대로 두고 오류 처리만 'replace' 로 바꾼다** — UTF-8 로 강제 전환하면 cp949
+    콘솔에서 한글 전체가 깨지기 때문이다. 인코딩 불가 문자만 '?' 로 떨어진다.
+
+    reconfigure 를 지원하지 않는 스트림(파이프·테스트 캡처)에서는 아무것도 하지 않는다.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(errors="replace")
+        except (AttributeError, ValueError, OSError):
+            pass
+
+
+@app.callback()
+def _main() -> None:
+    """모든 하위 명령 앞에 돈다."""
+    _harden_console()
 
 
 def _load_spec(spec_path: str) -> Spec:
