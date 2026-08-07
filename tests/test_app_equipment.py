@@ -159,3 +159,15 @@ def test_compliance_is_recomputed_after_a_swap():
     _picker(at, "UPS").set_value("ups_schneider_galaxy_vx_500kva").run()
     assert not at.exception, at.exception
     assert {"위반", "경고", "정보"} <= {m.label for m in at.metric}
+
+
+def test_air_cooling_dropdown_is_present():
+    """공냉장비도 화면에서 교체할 수 있어야 한다."""
+    at = _after_design_run()
+    assert _picker(at, "공냉장비") is not None
+
+
+def test_cooling_table_shows_air_cooling_quantity():
+    """냉각 표에 공냉장비 수량이 보인다(값은 엔진이 만든 것을 그대로)."""
+    at = _after_design_run()
+    assert _cell(at, COOLING_TABLE, "공냉장비 수량")

@@ -127,6 +127,8 @@ def write_design_basis(result: SizingResult, out_dir: str) -> str:
         ("총 발열", f"{c['it_heat_kw']} kW"),
         ("액냉 열량", f"{c['liquid_kw']} kW"),
         ("공냉 열량", f"{c['air_kw']} kW"),
+        ("공냉 구성", f"{c['air_cooling_qty']} 대 x {c['air_cooling_unit_kw']} kW "
+                      f"({c['air_cooling_method']})"),
         ("냉각수 유량", f"{c['coolant_flow_lpm']} L/min"),
         ("총 냉동톤", f"{c['total_rt']} RT"),
         ("CDU 구성", f"{c['cdu_qty']} 대 ({c['redundancy']})"),

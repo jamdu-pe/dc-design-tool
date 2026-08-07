@@ -68,3 +68,15 @@ def test_labels_are_quoted_so_parentheses_do_not_break_mermaid(result):
         for line in src.splitlines():
             if "(" in line and "-->" not in line:
                 assert '"' in line, f"라벨 미인용: {line}"
+
+
+def test_cooling_loop_shows_selected_air_equipment():
+    """공냉 노드가 하드코딩 문구가 아니라 실제 선택 장비를 보여준다."""
+    from dc_design_tool.engine.models import Spec
+    from dc_design_tool.engine.sizing import size
+    from dc_design_tool.reports.diagram_mermaid import cooling_loop
+    result = size(Spec(project="d", rack_id="nvidia_gb200_nvl72", it_power_mw=5.0))
+    src = cooling_loop(result)
+    assert "(CRAH/RDHx)" not in src          # 하드코딩 제거 확인
+    assert str(result.cooling["air_cooling_qty"]) in src
+    assert result.cooling["air_cooling_method"] in src

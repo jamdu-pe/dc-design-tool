@@ -114,8 +114,9 @@ def build(spec: str = typer.Option(..., help="spec.yaml 경로"),
     typer.echo(f"UPS {e['ups_qty']}대 / 배터리 {e['battery_energy_kwh']}kWh "
                f"/ 변압기 {e['transformer_qty']}대 / 수전 {e['primary_kv']}kV {e['mv_current_a']}A")
     c, n, sp = result.cooling, result.network, result.space
-    typer.echo(f"CDU {c['cdu_qty']}대 / 칠러 {c['chiller_qty']}대 / {c['total_rt']}RT "
-               f"/ 유량 {c['coolant_flow_lpm']}L/min")
+    typer.echo(f"CDU {c['cdu_qty']}대 / 칠러 {c['chiller_qty']}대 "
+               f"/ 공냉 {c['air_cooling_qty']}대({c['air_cooling_method']}) "
+               f"/ {c['total_rt']}RT / 유량 {c['coolant_flow_lpm']}L/min")
     typer.echo(f"Leaf {n['leaf_qty']}대 / Spine {n['spine_qty']}대 "
                f"/ 트랜시버 {n['transceiver_qty']}개 / 총면적 {sp['total_building_m2']}m2")
 

@@ -39,6 +39,10 @@ COOLING_LABELS = {
     "coolant_flow_lpm": "냉각수 유량 (L/min)", "total_rt": "총 냉동톤 (RT)",
     "cdu_qty": "CDU 수량", "cdu_unit_kw": "CDU 단위용량 (kW)",
     "chiller_qty": "칠러 수량", "chiller_unit_kw": "칠러 단위용량 (kW)",
+    "air_cooling_qty": "공냉장비 수량",
+    "air_cooling_unit_kw": "공냉장비 단위용량 (kW)",
+    "air_cooling_method": "공냉 방식", "air_cooling_mounting": "공냉 장착",
+    "rack_air_kw": "랙당 공냉 잔열 (kW)",
     "redundancy": "기계 이중화",
 }
 ELECTRICAL_LABELS = {
@@ -85,7 +89,7 @@ SEVERITY_ORDER = {"violation": 0, "warning": 1, "info": 2}
 
 # 장비 교체 드롭다운의 배치. 역할 키는 engine.sizing.SELECTABLE_ROLES 와 같아야 한다.
 EQUIPMENT_GROUPS = [
-    ("기계", [("cdu", "CDU"), ("chiller", "칠러")]),
+    ("기계", [("cdu", "CDU"), ("chiller", "칠러"), ("air_cooling", "공냉장비")]),
     ("전기", [("ups", "UPS"), ("battery", "배터리"), ("generator", "발전기"),
               ("transformer", "변압기"), ("pdu", "랙 PDU"), ("busway", "버스웨이")]),
     ("통신", [("leaf", "Leaf 스위치"), ("spine", "Spine 스위치"),
@@ -233,7 +237,7 @@ else:
     # 여기서 고른 값은 다음 실행의 size(spec, selections=...) 로 들어간다.
     with st.expander("장비 교체 — 역할별 후보 선택", expanded=False):
         st.caption("바꾸면 수량·용량·면적·규격검증이 엔진에서 다시 계산된다. "
-                   "`기본`은 카탈로그 등재 순서상 첫 후보다.")
+                   "`기본`은 카탈로그에 기본으로 지정된 블록이다.")
         st.button("기본 장비로 되돌리기", on_click=_reset_equipment)
 
         for domain, roles in EQUIPMENT_GROUPS:
