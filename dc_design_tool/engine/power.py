@@ -14,8 +14,8 @@ def size_electrical(it_kw: float, cooling_kw: float, rack_count: int,
 
     Args:
         selections: 역할 → block_id. `ups`·`battery`·`generator`·`transformer`
-            ·`pdu`·`busway` 를 교체할 수 있다. 미지정 역할은 카탈로그 첫 후보를
-            쓴다. 교체해도 필요용량·대수는 아래 `calc.*` 로 재산정한다.
+            ·`pdu`·`busway` 를 교체할 수 있다. 미지정 역할은 `default: true`가
+            붙은 블록을 쓴다. 교체해도 필요용량·대수는 아래 `calc.*` 로 재산정한다.
     """
     red = load_rule("redundancy.yaml", spec.region)
     el = load_rule("electrical.yaml", spec.region)

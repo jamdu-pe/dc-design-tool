@@ -48,7 +48,8 @@ def cooling_loop(result: SizingResult) -> str:
         "flowchart LR",
         _node("RACK", f"IT 랙 {result.rack_count}대 / 발열 {c['it_heat_kw']}kW"),
         _node("TCS", f"액냉 TCS 루프 {c['liquid_kw']}kW / {c['coolant_flow_lpm']}L/min"),
-        _node("AIR", f"공냉 잔열 {c['air_kw']}kW (CRAH/RDHx)"),
+        _node("AIR", f"공냉 잔열 {c['air_kw']}kW / "
+                     f"{c['air_cooling_method']} {c['air_cooling_qty']}대"),
         _node("CDU", f"CDU {c['cdu_qty']}대 ({c['redundancy']})"),
         _node("CHW", "냉수 (FWS/CHW) 헤더"),
         _node("CH", f"칠러 {c['chiller_qty']}대 / {c['total_rt']}RT"),

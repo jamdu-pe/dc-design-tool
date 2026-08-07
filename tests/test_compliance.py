@@ -2,6 +2,7 @@
 import pytest
 
 from dc_design_tool.engine import compliance
+from dc_design_tool.engine.catalog import list_candidates, load_blocks
 from dc_design_tool.engine.models import Spec
 from dc_design_tool.engine.sizing import size
 
@@ -132,3 +133,53 @@ def test_sizing_result_carries_compliance_report():
     r = size(Spec(rack_id="nvidia_gb200_nvl72", it_power_mw=5.0))
     assert r.compliance is not None
     assert r.compliance.tier == "III"
+
+
+# ---------- 공냉 판정 ----------
+
+def _result_codes(result) -> set[str]:
+    return {f.code for f in result.compliance.findings}
+
+
+def _result_finding(result, code):
+    return next(f for f in result.compliance.findings if f.code == code)
+
+
+def test_rack_mounted_air_cooling_gets_capacity_finding_not_redundancy():
+    """랙 장착형은 이중화 실효성 대상이 아니다 — 랙당 용량만 본다."""
+    r = size(Spec(project="ac", rack_id="nvidia_gb200_nvl72", it_power_mw=5.0))
+    codes = _result_codes(r)
+    assert "AIR_COOLING_RACK_CAPACITY" in codes
+    assert "REDUNDANCY_EFFECTIVE_AIR_COOLING" not in codes
+
+
+def test_rack_air_load_within_unit_capacity_passes():
+    """GB200 은 랙당 18kW 로 60kW 도어에 들어간다."""
+    r = size(Spec(project="ac", rack_id="nvidia_gb200_nvl72", it_power_mw=5.0))
+    assert _result_finding(r, "AIR_COOLING_RACK_CAPACITY").severity == "info"
+
+
+def test_rack_air_load_exceeding_unit_capacity_is_violation():
+    """단위용량 미달이면 대수로 보완할 수 없으므로 위반이다."""
+    blocks = load_blocks()
+    shrunk = dict(blocks)
+    door = blocks["rdhx_60kw"]
+    shrunk["rdhx_60kw"] = door.model_copy(update={
+        "interface": door.interface.model_copy(update={"capacity_kw": 5.0})})
+    r = size(Spec(project="ac", rack_id="nvidia_gb200_nvl72", it_power_mw=5.0),
+             blocks=shrunk)
+    f = _result_finding(r, "AIR_COOLING_RACK_CAPACITY")
+    assert f.severity == "violation"
+    assert f.domain == "기계"
+
+
+def test_room_mounted_air_cooling_gets_redundancy_finding():
+    """실 장착형은 UPS·CDU 와 나란히 단일고장 후 잔여용량 검사를 받는다."""
+    blocks = load_blocks()
+    room = next(b for b in list_candidates("cooling", "air_cooling", blocks)
+                if b.interface.mounting == "room")
+    r = size(Spec(project="ac", rack_id="nvidia_gb200_nvl72", it_power_mw=5.0),
+             selections={"air_cooling": room.id})
+    codes = _result_codes(r)
+    assert "REDUNDANCY_EFFECTIVE_AIR_COOLING" in codes
+    assert "AIR_COOLING_RACK_CAPACITY" not in codes

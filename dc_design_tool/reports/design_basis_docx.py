@@ -120,13 +120,15 @@ def write_design_basis(result: SizingResult, out_dir: str) -> str:
     _h(doc, "4. 기계(Mechanical, 냉각) 설계 기준")
     c = result.cooling
     doc.add_paragraph(
-        f"IT 발열 {c['it_heat_kw']} kW 중 약 {int((c['liquid_kw']/c['it_heat_kw'])*100)}%를 "
+        f"IT 발열 {c['it_heat_kw']} kW 중 약 {int(c['liquid_fraction']*100)}%를 "
         "직접칩냉각(D2C) 액냉이 흡수하고 잔열은 공냉으로 처리한다. "
         f"이중화 등급은 {c['redundancy']}를 적용한다.")
     _kv_table(doc, [
         ("총 발열", f"{c['it_heat_kw']} kW"),
         ("액냉 열량", f"{c['liquid_kw']} kW"),
         ("공냉 열량", f"{c['air_kw']} kW"),
+        ("공냉 구성", f"{c['air_cooling_qty']} 대 x {c['air_cooling_unit_kw']} kW "
+                      f"({c['air_cooling_method']}, {c['air_cooling_mounting']} 장착)"),
         ("냉각수 유량", f"{c['coolant_flow_lpm']} L/min"),
         ("총 냉동톤", f"{c['total_rt']} RT"),
         ("CDU 구성", f"{c['cdu_qty']} 대 ({c['redundancy']})"),

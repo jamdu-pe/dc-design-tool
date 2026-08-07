@@ -14,9 +14,10 @@ from .models import Block, SizingResult, Spec
 
 # 교체 가능한 역할(subtype) → 블록 종류(type).
 # 이 표가 "설계에서 바꿀 수 있는 장비 축"의 정의다. 도메인 엔진이 실제로 소비하는
-# 역할만 싣는다(예: rear_door_hx 는 아직 어떤 엔진도 쓰지 않아 제외).
+# 역할만 싣는다. 역할을 추가하면 해당 subtype 후보 중 하나에 `default: true` 가
+# 있어야 한다(tests/test_selection.py 가 강제).
 SELECTABLE_ROLES: dict[str, str] = {
-    "cdu": "cooling", "chiller": "cooling",
+    "cdu": "cooling", "chiller": "cooling", "air_cooling": "cooling",
     "ups": "electrical", "battery": "electrical", "generator": "electrical",
     "transformer": "electrical", "pdu": "electrical", "busway": "electrical",
     "leaf": "network", "spine": "network", "transceiver": "network",
@@ -58,18 +59,19 @@ def merge_selections(spec: Spec,
 
 def _candidate_table(blocks: dict[str, Block],
                      selections: dict[str, str]) -> dict[str, list[dict]]:
-    """역할별 후보 목록(UI 드롭다운용). 카탈로그 등재 순서를 그대로 쓴다."""
+    """역할별 후보 목록(UI 드롭다운용). 표시 순서는 카탈로그 등재 순서를 쓰고,
+    기본값 표시는 `default` 플래그를 따른다(플래그가 없으면 첫 후보)."""
     table: dict[str, list[dict]] = {}
     for role, type_ in SELECTABLE_ROLES.items():
-        rows = []
-        for index, b in enumerate(list_candidates(type_, role, blocks)):
-            rows.append({
-                "id": b.id, "vendor": b.vendor, "model": b.model,
-                "capacity": _capacity_label(b), "confidence": b.confidence,
-                "is_default": index == 0,
-                "is_selected": b.id == selections.get(role),
-            })
-        table[role] = rows
+        candidates = list_candidates(type_, role, blocks)
+        default_id = next((b.id for b in candidates if b.default),
+                          candidates[0].id if candidates else None)
+        table[role] = [{
+            "id": b.id, "vendor": b.vendor, "model": b.model,
+            "capacity": _capacity_label(b), "confidence": b.confidence,
+            "is_default": b.id == default_id,
+            "is_selected": b.id == selections.get(role),
+        } for b in candidates]
     return table
 
 
@@ -81,8 +83,8 @@ def size(spec: Spec, blocks: Optional[dict] = None,
         spec: 요구사항.
         blocks: 카탈로그 주입(미지정 시 `data/*.yaml` 로드). 시나리오 비교·테스트용.
         selections: 역할(subtype) → block_id. `spec.selections` 위에 얹히며 역할
-            단위로 이쪽이 이긴다. 지정하지 않은 역할은 카탈로그 첫 후보를 쓴다.
-            장비를 바꿔도 수량·용량은 각 도메인 엔진이 `calc.*` 로 재산정한다
+            단위로 이쪽이 이긴다. 지정하지 않은 역할은 `default: true`가 붙은
+            블록을 쓴다. 장비를 바꿔도 수량·용량은 각 도메인 엔진이 `calc.*` 로 재산정한다
             (CLAUDE.md 절대규칙 1). 가능한 역할은 `SELECTABLE_ROLES` 참고.
 
     Raises:
@@ -107,7 +109,8 @@ def size(spec: Spec, blocks: Optional[dict] = None,
 
     # ---- 2) 기계(냉각) ----
     cooling, c_bom = cooling_engine.size_cooling(it_kw, rack, spec, blocks,
-                                                 selections=selections)
+                                                 selections=selections,
+                                                 rack_count=n_rack, rack_kw=rack_kw)
     bom += c_bom
 
     # ---- 3) 전기 ----

@@ -1,13 +1,14 @@
 # 냉각 장비 카탈로그 (type=cooling). capacity_kw = 열제거 능력
 #
-# [순서 주의] engine 이 아직 `_first()`(해당 subtype 의 첫 블록)로 장비를 고른다.
-# 각 subtype 의 기존 기본 블록을 맨 앞에 두고 신규 후보는 뒤에 붙일 것.
-# 순서를 바꾸면 모든 설계 결과가 조용히 바뀐다. (선정 엔진 도입 시 이 제약은 사라진다)
+# [기본 블록] 각 subtype 의 기본 선택은 `default: true` 플래그가 정한다. 줄 순서는
+# 표시 순서일 뿐이며 설계 결과를 바꾸지 않는다. 역할마다 플래그는 정확히 하나여야 하고,
+# tests/test_selection.py 가 이를 강제한다.
 #
 # [footprint_m2 주의] 신규 벤더 블록의 capacity 는 데이터시트 확인값이지만,
 # footprint_m2 는 데이터시트 치수를 확인하지 못해 동급 장비 통상값으로 넣었다.
 # 공간 엔진(부속실 면적)에 직접 영향을 주므로 실시설계 전 실측 치수로 교체할 것.
 - id: cdu_liquid_1300kw
+  default: true                # 이 역할의 기본 블록 (줄 순서가 아니라 이 플래그가 정한다)
   type: cooling
   subtype: cdu                 # Coolant Distribution Unit (액-액)
   vendor: Generic
@@ -22,19 +23,23 @@
   source_url: "generic-industry-typical"
 
 - id: rdhx_60kw
+  default: true                # air_cooling 역할의 기본 블록
   type: cooling
-  subtype: rear_door_hx        # 후면도어 열교환기(잔열 공냉 보완)
+  subtype: air_cooling         # 공냉 잔열 처리 역할(방식은 interface.method)
   vendor: Generic
   model: RDHx-60
   interface:
     capacity_kw: 60
     medium: liquid_to_air
-    footprint_m2: 0.0
+    method: rear_door_hx       # 후면도어 열교환기
+    mounting: rack             # 랙 후면 장착 → 랙당 1대
+    footprint_m2: 0.0          # 랙에 붙으므로 별도 바닥면적을 차지하지 않는다
   as_of_date: "2025-06"
   confidence: vendor
   source_url: "generic-industry-typical"
 
 - id: chiller_1000rt
+  default: true                # 이 역할의 기본 블록 (줄 순서가 아니라 이 플래그가 정한다)
   type: cooling
   subtype: chiller
   vendor: Generic
@@ -122,3 +127,52 @@
   as_of_date: "2026-08"
   confidence: projected        # 정격범위는 확인, 해당 500RT 구성의 개별 사양은 미확인
   source_url: "https://www.carrier.com/us/en/commercial/chillers/19dv/ (350~1150RT 범위 내 선택점)"
+
+- id: rdhx_motivair_chilleddoor_m16
+  type: cooling
+  subtype: air_cooling         # 공냉 잔열 처리 역할(방식은 interface.method)
+  vendor: Motivair (Schneider Electric)
+  model: ChilledDoor M16 (MCD-M16-48U800)
+  interface:
+    capacity_kw: 75            # 0~75kW 정격 (벤더 제품페이지 확인)
+    medium: liquid_to_air
+    method: rear_door_hx       # 후면도어 열교환기
+    mounting: rack              # 랙 후면 장착 → 랙당 1대
+    footprint_m2: 0.0          # 랙에 붙으므로 별도 바닥면적을 차지하지 않는다
+  as_of_date: "2026-08"
+  confidence: vendor
+  source_url: "https://www.motivaircorp.com/products/chilleddoor/ (0-75kW 정격; 모델번호는 리셀러 사양표 https://bluesquarepower.com/motivair-corporation-motivair-m16-chilleddoor-48u800-up-to-75kw-temp-ctrl-bottom-feed-1-pack-rack-mountable-black-it-75-kw-black-air-cooler-48u.html 교차확인)"
+
+- id: crah_vertiv_liebert_crv040
+  type: cooling
+  subtype: air_cooling         # 공냉 잔열 처리 역할(방식은 interface.method)
+  vendor: Vertiv
+  model: Liebert CRV CR040RC (600mm, 냉수식)
+  interface:
+    capacity_kw: 42.9          # 순감열용량 42.9kW(146.4 kBtuh), 모델명 정격 40kW급 (데이터시트 확인)
+    medium: chilled_water
+    method: in_row              # 열별(row) 배치형 공조 — Vertiv 자체 분류상 "row-based cooling"
+    mounting: room
+    footprint_m2: 0.71         # 600mm x 1175mm (데이터시트 치수 확인)
+  as_of_date: "2026-08"
+  confidence: vendor
+  source_url: "https://www.elecsupport.com/products/thermal-management/rackin-row-cooling/fixed-in-row/vertiv-liebert-crv"
+
+- id: crah_stulz_cyberair3pro_cw2_1280
+  type: cooling
+  subtype: air_cooling         # 공냉 잔열 처리 역할(방식은 interface.method)
+  vendor: STULZ
+  model: CyberAir 3PRO ASD 1280 CW2
+  interface:
+    capacity_kw: 103.9         # 26°C/40%RH 감열용량 — 스캔 매뉴얼 재추출마다 80.8kW/160kW 등
+                                # 다른 값이 나와 확정 불가. 가장 많이 나온 값을 채택했으나 미확정.
+    medium: chilled_water
+    method: crah                # 실내 바닥설치형 정밀공조기(CRAH)
+    mounting: room
+    footprint_m2: 2.5           # 미확인 — 매뉴얼 치수도 재추출마다 2200x1400 / 2200x2200 /
+                                # 3110x980 등으로 달라 신뢰 불가. STULZ 공식 제품페이지가 밝힌
+                                # 제품군 전체 범위(폭 0.95~3.35m x 깊이 0.89~1.04m, 22~260kW)
+                                # 안에서 104kW급(중형)에 해당하는 동급 통상값으로 추정.
+  as_of_date: "2026-08"
+  confidence: projected        # 용량·치수 모두 출처(스캔 PDF)가 재추출 시 값이 달라 미확정
+  source_url: "https://www.manualslib.com/manual/1301689/Stulz-Cyberair-3pro-Cw2.html (스캔본이라 재추출마다 수치가 달라짐 — 확인 불가; 폭/깊이 범위 및 용량범위는 공식 제품페이지 https://www.stulz.com/products/detail/cyberair-3pro-cw/ 기준 추정)"

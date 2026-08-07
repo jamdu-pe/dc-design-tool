@@ -27,11 +27,19 @@ def test_list_candidates_returns_only_matching_role():
     assert all(b.type == "electrical" and b.subtype == "ups" for b in ups)
 
 
-def test_list_candidates_first_is_current_default():
-    """[0]이 곧 기본값이다. 이 순서가 바뀌면 모든 설계 결과가 바뀐다."""
-    assert list_candidates("electrical", "ups")[0].id == "ups_1250kva"
-    assert list_candidates("cooling", "cdu")[0].id == "cdu_liquid_1300kw"
-    assert list_candidates("network", "leaf")[0].id == "leaf_switch_64x800g"
+def test_default_flagged_block_is_current_default():
+    """`default: true` 가 곧 기본값이다. 이 플래그가 바뀌면 모든 설계 결과가
+    바뀐다 — 카탈로그 등재 순서(YAML 안 위치)는 더 이상 기본값을 정하지 않으므로
+    새 블록을 파일 맨 위에 끼워 넣어도 이 테스트는 깨지지 않아야 한다."""
+    blocks = load_blocks()
+    for type_, role, expected_id in [
+        ("electrical", "ups", "ups_1250kva"),
+        ("cooling", "cdu", "cdu_liquid_1300kw"),
+        ("network", "leaf", "leaf_switch_64x800g"),
+    ]:
+        flagged = [b.id for b in list_candidates(type_, role, blocks) if b.default]
+        assert flagged == [expected_id]
+        assert resolve(type_, role, blocks).id == expected_id
 
 
 def test_list_candidates_unknown_role_returns_empty_not_error():
@@ -46,7 +54,7 @@ def test_list_candidates_accepts_injected_blocks():
 
 # ---------- resolve ----------
 
-def test_resolve_without_selection_returns_first_candidate():
+def test_resolve_without_selection_returns_the_default_flagged_block():
     blocks = load_blocks()
     assert resolve("electrical", "ups", blocks).id == "ups_1250kva"
 
@@ -172,3 +180,98 @@ def test_candidates_are_json_serializable():
     """MCP·웹 UI 응답에 그대로 실린다."""
     import json
     json.dumps(size(_spec()).candidates, ensure_ascii=False)
+
+
+# ---------- default 플래그 (YAML 순서 의존 제거) ----------
+
+def test_every_selectable_role_has_exactly_one_default():
+    """배포 카탈로그의 모든 역할에 기본 블록이 정확히 하나여야 한다.
+
+    이 테스트가 있어야 `resolve()` 의 '첫 후보' 폴백 경로가 실제 설계에서 쓰이지
+    않는다. 새 역할을 추가하면 여기서 먼저 걸린다.
+    """
+    blocks = load_blocks()
+    for role, type_ in SELECTABLE_ROLES.items():
+        flagged = [b.id for b in list_candidates(type_, role, blocks) if b.default]
+        assert len(flagged) == 1, f"역할 '{role}' 의 default 블록: {flagged}"
+
+
+def test_resolve_prefers_default_flag_over_yaml_order():
+    """플래그가 붙은 블록이 등재 순서를 이긴다."""
+    blocks = load_blocks()
+    first, second = list_candidates("electrical", "ups", blocks)[:2]
+    moved = dict(blocks)
+    moved[first.id] = first.model_copy(update={"default": False})
+    moved[second.id] = second.model_copy(update={"default": True})
+    assert resolve("electrical", "ups", moved).id == second.id
+
+
+def test_resolve_falls_back_to_first_when_no_flag():
+    """플래그가 하나도 없으면 기존대로 첫 후보. 주입 카탈로그(테스트용)를 위한 폴백."""
+    blocks = load_blocks()
+    unflagged = {bid: b.model_copy(update={"default": False})
+                 for bid, b in blocks.items()}
+    expected = list_candidates("cooling", "chiller", unflagged)[0].id
+    assert resolve("cooling", "chiller", unflagged).id == expected
+
+
+def test_candidate_table_marks_flagged_block_as_default():
+    """UI 후보표의 is_default 도 인덱스가 아니라 플래그를 본다."""
+    result = size(_spec())
+    for role in SELECTABLE_ROLES:
+        marked = [c["id"] for c in result.candidates[role] if c["is_default"]]
+        assert len(marked) == 1, f"{role}: {marked}"
+
+
+# ---------- 장착 방식 인터페이스 ----------
+
+def test_interface_defaults_to_room_mounting():
+    """대부분의 장비는 실 단위 설치다. 랙 장착형만 명시한다."""
+    from dc_design_tool.engine.models import Interface
+    assert Interface().mounting == "room"
+    assert Interface().method is None
+
+
+def test_interface_rejects_unknown_mounting():
+    from pydantic import ValidationError as PydanticError
+    from dc_design_tool.engine.models import Interface
+    with pytest.raises(PydanticError):
+        Interface(mounting="ceiling")
+
+
+# ---------- 공냉 후보 교체 ----------
+
+def test_air_cooling_has_both_mounting_types():
+    """랙 장착형과 실 장착형이 모두 있어야 방식 비교가 성립한다."""
+    blocks = load_blocks()
+    mountings = {b.interface.mounting
+                 for b in list_candidates("cooling", "air_cooling", blocks)}
+    assert mountings == {"rack", "room"}
+
+
+def test_swapping_to_room_air_cooling_changes_quantity_and_area():
+    """실 장착형으로 바꾸면 대수가 용량 기준으로 재산정되고 기계실 면적이 는다."""
+    blocks = load_blocks()
+    room = next(b for b in list_candidates("cooling", "air_cooling", blocks)
+                if b.interface.mounting == "room")
+    base = size(_spec())
+    swapped = size(_spec(), selections={"air_cooling": room.id})
+
+    assert base.cooling["air_cooling_mounting"] == "rack"
+    assert swapped.cooling["air_cooling_mounting"] == "room"
+    assert swapped.cooling["air_cooling_qty"] != base.cooling["air_cooling_qty"]
+    assert swapped.selections["air_cooling"] == room.id
+    # 랙 장착형은 footprint 0 → 실 장착형으로 바꾸면 기계실 장비면적이 늘어난다
+    assert (swapped.space["mechanical_equipment_m2"]
+            > base.space["mechanical_equipment_m2"])
+
+
+def test_air_cooling_quantity_uses_redundancy_rule_when_room_mounted():
+    """실 장착형은 CDU 와 같은 이중화 규칙을 탄다."""
+    blocks = load_blocks()
+    room = next(b for b in list_candidates("cooling", "air_cooling", blocks)
+                if b.interface.mounting == "room")
+    rule = load_rule("redundancy.yaml")["N+1"]
+    r = size(_spec(), selections={"air_cooling": room.id})
+    assert r.cooling["air_cooling_qty"] == calc.redundant_qty(
+        r.cooling["air_kw"], r.cooling["air_cooling_unit_kw"], rule)

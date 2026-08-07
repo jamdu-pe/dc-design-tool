@@ -17,6 +17,13 @@ class Interface(BaseModel):
     cooling: Optional[str] = None
     liquid_fraction: float = 0.0
     supply_water_c: Optional[float] = None
+    # 냉각장비 설치 형태. 수량 산정식이 갈리는 유일한 기준이다.
+    #   rack = 랙 후면 장착(랙당 1대, 이중화 대수 증설 불가)
+    #   room = 실 단위 설치(필요 용량 + 이중화 규칙으로 대수 산정)
+    mounting: Literal["rack", "room"] = "room"
+    # 기술 방식 표기(rear_door_hx | crah | in_row 등). 표시·추적용이고 계산에 쓰지 않는다.
+    # 같은 mounting 이라도 방식 이름이 달라야 보고서에서 구분되기 때문에 따로 둔다.
+    method: Optional[str] = None
     # 물리
     rack_units: Optional[int] = None
     footprint_m2: Optional[float] = None
@@ -55,6 +62,10 @@ class Block(BaseModel):
     subtype: Optional[str] = None
     interface: Interface
     composed_of: list[Component] = Field(default_factory=list)
+    # 역할(subtype) 안에서 이 블록이 기본 선택인가. selections 로 지정하지 않은 역할에
+    # 무엇을 쓸지는 YAML 줄 순서가 아니라 이 플래그가 정한다.
+    # 역할마다 정확히 하나만 true 여야 한다(tests/test_selection.py 가 강제).
+    default: bool = False
     as_of_date: Optional[str] = None
     confidence: Confidence = "projected"
     source_url: Optional[str] = None
@@ -74,7 +85,7 @@ class Spec(BaseModel):
     ambient_design_c: float = 33.0
     climate: str = "KR"
     region: str = "generic"   # 규격 팩(rules/regions/*.yaml). 예: "KR" = KEC 기반
-    # 역할(subtype) → block_id. 비워 두면 카탈로그 첫 후보를 쓴다.
+    # 역할(subtype) → block_id. 비워 두면 `default: true`가 붙은 블록을 쓴다.
     # 가능한 역할은 engine.sizing.SELECTABLE_ROLES 참고. 예: {"ups": "ups_1250kva"}
     selections: dict[str, str] = Field(default_factory=dict)
 

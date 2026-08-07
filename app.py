@@ -39,6 +39,10 @@ COOLING_LABELS = {
     "coolant_flow_lpm": "냉각수 유량 (L/min)", "total_rt": "총 냉동톤 (RT)",
     "cdu_qty": "CDU 수량", "cdu_unit_kw": "CDU 단위용량 (kW)",
     "chiller_qty": "칠러 수량", "chiller_unit_kw": "칠러 단위용량 (kW)",
+    "air_cooling_qty": "공냉장비 수량",
+    "air_cooling_unit_kw": "공냉장비 단위용량 (kW)",
+    "air_cooling_method": "공냉 방식", "air_cooling_mounting": "공냉 장착",
+    "rack_air_kw": "랙당 공냉 잔열 (kW)",
     "redundancy": "기계 이중화",
 }
 ELECTRICAL_LABELS = {
@@ -85,17 +89,20 @@ SEVERITY_ORDER = {"violation": 0, "warning": 1, "info": 2}
 
 # 장비 교체 드롭다운의 배치. 역할 키는 engine.sizing.SELECTABLE_ROLES 와 같아야 한다.
 EQUIPMENT_GROUPS = [
-    ("기계", [("cdu", "CDU"), ("chiller", "칠러")]),
+    ("기계", [("cdu", "CDU"), ("chiller", "칠러"), ("air_cooling", "공냉장비")]),
     ("전기", [("ups", "UPS"), ("battery", "배터리"), ("generator", "발전기"),
               ("transformer", "변압기"), ("pdu", "랙 PDU"), ("busway", "버스웨이")]),
     ("통신", [("leaf", "Leaf 스위치"), ("spine", "Spine 스위치"),
               ("transceiver", "트랜시버")]),
 ]
+# 첫 화면 기본 랙(대표 모델). 카탈로그에 없으면 목록 첫 항목으로 폴백한다.
+DEFAULT_RACK = "nvidia_gb200_nvl72"
+
 EQUIPMENT_KEY = "sel_%s"        # 역할별 위젯 키
 
 
 def _selected_equipment() -> dict[str, str]:
-    """사용자가 고른 역할별 블록. 안 고른 역할은 빼서 엔진 기본값(첫 후보)에 맡긴다."""
+    """사용자가 고른 역할별 블록. 안 고른 역할은 빼서 엔진 기본값(`default: true`)에 맡긴다."""
     picked = {}
     for role in SELECTABLE_ROLES:
         value = st.session_state.get(EQUIPMENT_KEY % role)
@@ -108,7 +115,7 @@ def _reset_equipment() -> None:
     """위젯 키를 지워 모든 역할을 카탈로그 기본값으로 되돌린다.
 
     on_click 콜백은 스크립트 재실행 **전에** 돌므로, 위젯이 다시 만들어질 때
-    session_state 가 비어 있어 기본값(첫 후보)이 잡힌다.
+    session_state 가 비어 있어 기본값(`default: true`가 붙은 블록)이 잡힌다.
     """
     for role in SELECTABLE_ROLES:
         st.session_state.pop(EQUIPMENT_KEY % role, None)
@@ -126,8 +133,10 @@ def _catalog() -> dict:
     """카탈로그를 (표시용으로) 캐싱해 읽는다. 랙 등록 후에는 캐시를 비운다."""
     blocks = load_blocks()
     racks = {bid: b for bid, b in blocks.items() if b.type == "rack"}
+    options = sorted(racks)
     return {
-        "rack_options": sorted(racks),
+        "rack_options": options,
+        "default_rack": DEFAULT_RACK if DEFAULT_RACK in racks else options[0],
         "rack_labels": {bid: f"{b.vendor} {b.model} · {b.interface.power_kw_typical}kW "
                              f"[{b.confidence}]" for bid, b in racks.items()},
         "tiers": list(load_rule("tiers.yaml")["tiers"]),
@@ -161,6 +170,7 @@ region = st.sidebar.selectbox(
     index=cat["regions"].index("generic") if "generic" in cat["regions"] else 0,
     format_func=lambda c: f"{c} — {cat['region_names'][c]}")
 rack_id = st.sidebar.selectbox("랙 모델", cat["rack_options"],
+                               index=cat["rack_options"].index(cat["default_rack"]),
                                format_func=lambda b: cat["rack_labels"][b])
 
 mode = st.sidebar.radio("규모 입력", ["IT 부하 (MW)", "랙 수"], horizontal=True)
@@ -233,7 +243,7 @@ else:
     # 여기서 고른 값은 다음 실행의 size(spec, selections=...) 로 들어간다.
     with st.expander("장비 교체 — 역할별 후보 선택", expanded=False):
         st.caption("바꾸면 수량·용량·면적·규격검증이 엔진에서 다시 계산된다. "
-                   "`기본`은 카탈로그 등재 순서상 첫 후보다.")
+                   "`기본`은 카탈로그에 기본으로 지정된 블록이다.")
         st.button("기본 장비로 되돌리기", on_click=_reset_equipment)
 
         for domain, roles in EQUIPMENT_GROUPS:

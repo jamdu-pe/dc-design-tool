@@ -17,7 +17,7 @@ from tests.auth_fixtures import TEST_PASSWORD, TEST_USER, auth_secrets  # noqa: 
 
 APP = str(pathlib.Path(__file__).resolve().parent.parent / "app.py")
 
-ROLE_LABELS = ["CDU", "칠러", "UPS", "배터리", "발전기", "변압기",
+ROLE_LABELS = ["CDU", "칠러", "공냉장비", "UPS", "배터리", "발전기", "변압기",
                "랙 PDU", "버스웨이", "Leaf 스위치", "Spine 스위치", "트랜시버"]
 
 
@@ -72,7 +72,7 @@ def test_picker_options_carry_vendor_model_and_confidence():
     assert "projected" in " | ".join(_picker(at, "칠러").options)
 
 
-def test_pickers_default_to_the_catalog_first_candidate():
+def test_pickers_default_to_the_default_flagged_block():
     at = _after_design_run()
     assert _picker(at, "CDU").value == "cdu_liquid_1300kw"
     assert _picker(at, "UPS").value == "ups_1250kva"
@@ -159,3 +159,15 @@ def test_compliance_is_recomputed_after_a_swap():
     _picker(at, "UPS").set_value("ups_schneider_galaxy_vx_500kva").run()
     assert not at.exception, at.exception
     assert {"위반", "경고", "정보"} <= {m.label for m in at.metric}
+
+
+def test_air_cooling_dropdown_is_present():
+    """공냉장비도 화면에서 교체할 수 있어야 한다."""
+    at = _after_design_run()
+    assert _picker(at, "공냉장비") is not None
+
+
+def test_cooling_table_shows_air_cooling_quantity():
+    """냉각 표에 공냉장비 수량이 보인다(값은 엔진이 만든 것을 그대로)."""
+    at = _after_design_run()
+    assert _cell(at, COOLING_TABLE, "공냉장비 수량")
