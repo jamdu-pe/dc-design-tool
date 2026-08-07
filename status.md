@@ -165,12 +165,22 @@ cp949 콘솔에서 CLI 출력 중 em-dash·`≈` 등을 만나면 `UnicodeEncode
 | git 저장소 초기화 | 완료 (`main`) |
 | 최초 커밋 | 완료 (`49b9dbd`, 90파일) |
 | GitHub 저장소 생성·push | 완료 (2026-08-06) |
-| share.streamlit.io 앱 생성 | **미완** — 브라우저 작업 |
+| main 푸시 (공냉 역할 포함 14커밋) | 완료 (2026-08-07, `0a969e3`) |
+| share.streamlit.io 앱 생성 | 완료 (2026-08-07) |
 | Secrets 설정 (로컬) | 완료 (2026-08-07) — `.streamlit/secrets.toml`, gitignore |
-| Secrets 설정 (Cloud) | **미완** — 앱 Settings → Secrets 에 같은 내용 붙여넣기 |
-| 뷰어 초대 (Sharing) | **미완** |
+| Secrets 설정 (Cloud) | 완료 (2026-08-07) |
+| 뷰어 초대 (Sharing) | 완료 (2026-08-07) |
 
 절차는 README의 "Streamlit Community Cloud 배포" 절 참고.
+
+배포 3단계는 브라우저 작업이라 사용자가 직접 수행했고, 완료 보고를 받아 기록한 것이다
+(이 저장소에서 자동 검증한 항목이 아니다). 다음 세션에서 앱이 이상하면 아래
+"배포 후 확인" 항목부터 짚을 것.
+
+### 배포 후 확인 (다음 접속 때 한 번 훑기)
+- 로그인 화면 라벨이 `이름`인가 — `사번`이면 Cloud가 옛 커밋을 잡고 있다(Manage app → Reboot).
+- 로그인 후 `장비 교체` 패널에 `공냉장비` 드롭다운이 있는가.
+- CRAH로 바꾸면 수량·기계실 면적·규격검증이 함께 갱신되는가.
 
 ### 인증 관련 주의
 - 이 PC의 Windows 자격 증명 관리자에 **다른 사람 계정(`Immersion-Ben`) 토큰이
@@ -194,30 +204,64 @@ cp949 콘솔에서 CLI 출력 중 em-dash·`≈` 등을 만나면 `UnicodeEncode
 - `capex_usd`를 가진 블록이 0개라 `scenario`의 CAPEX 비교가 항상 "비용 미상"이다.
   공개 데이터시트에 단가가 없어 견적 등 별도 경로로만 채울 수 있다.
 
+## 원본 로드맵 대조 (2026-08-07 확인)
+
+`docs/Claude_Code_작업지시서.md` Phase 0~5, `docs/블루프린트.md` §8 로드맵·§10 인수기준을
+현재 코드와 대조한 결과다.
+
+| 원본 항목 | 상태 |
+|---|---|
+| Phase 0 스캐폴드 / 1 카탈로그 / 2 부하·냉각 / 3 전력·공간 / 4 통신·규격·산출물 / 5 CLI·에이전트 | 전부 완료 |
+| 블루프린트 MVP (카탈로그·엔진·Excel BOM·GB200 골든) | 완료 |
+| 블루프린트 v1 (이중화·규격검증·ICT·Word 기준서·서브에이전트) | 완료 |
+| v2 — 다이어그램 자동생성 | 완료 (mermaid 3종) |
+| v2 — PUE 비교엔진 | 완료 (`engine/scenario.py` 스윕) |
+| v2 — 신제품 카탈로그 확장 | 완료 (22 → 40블록) |
+| v2 — MCP 서버화 | 완료 (`mcp_server.py`, 툴 7종) |
+| **v2 — TCO 비교엔진** | **미완** — 아래 "다음 후보" 1번과 같은 문제다 |
+
+인수기준(§10) 5개는 모두 충족한다. 특히 3번("카탈로그에 YAML 블록 추가만으로 신규 장비가
+계산에 반영")은 이번 공냉 후보 3종을 엔진 수정 없이 추가하면서 실증됐다.
+
+**즉 로드맵에서 남은 것은 TCO 하나뿐이고, 그것은 코드 문제가 아니라 단가 데이터 문제다.**
+
 ### 다음 후보
-1. Streamlit Cloud 앱 생성 → Secrets → 뷰어 초대 (브라우저 작업)
-2. `capex_usd` 출처 확보 — 공개 데이터시트에 단가가 없어 견적 등 별도 경로가 필요하다.
+1. `capex_usd` 출처 확보 → TCO 비교엔진(v2 마지막 항목). 공개 데이터시트에 단가가 없어
+   견적 등 별도 경로가 필요하다. 지금은 `scenario` 비교표의 CAPEX 열이 계속 "비용 미상"이다.
+   **단가를 지어내면 절대규칙 위반이므로, 출처 없이는 진행할 수 없다.**
+2. 공냉 장비를 바꿔도 PUE는 움직이지 않는다. 냉각 소비전력이 `rules/cooling.yaml`의
+   단일 계수(`cooling_power_ratio`)라서다. 방식별 효율 차이를 비교하고 싶으면 그 계수를
+   장비 특성에서 끌어오도록 엔진을 먼저 고쳐야 한다(지금은 의도된 범위 제한).
+3. 사소한 잔여: 신규 UI 테스트 2건이 위젯 존재만 확인한다(엔진값 검증은
+   `test_cooling.py`·`test_selection.py`가 이미 덮으므로 급하지 않다).
 
 ## 다음 세션 시작점
 
-코드 쪽은 일단락됐다. 공냉 역할(`air_cooling`) 신설과 `default` 플래그 전환을 마쳤고
-`pytest -q` 는 360개 통과한다. 이번 작업분은 `worktree-air-cooling-role` 브랜치에
-있으며, main 에 합치는 절차가 아직 남아 있다.
+**이 프로젝트는 한 바퀴 다 돌았다.** 코드·테스트·배포가 모두 닫혔다.
 
-**남은 것은 사실상 배포뿐이며 대부분 브라우저 작업이다** (코드 쪽 잔여 항목은
-`capex_usd` 출처 확보 하나뿐 — 아래 "다음 후보" 2번 참고). 배포 절차는 README
-"Streamlit Community Cloud 배포" 절에 단계별로 있다. 요약:
+- `main` = `origin/main`, 미푸시 커밋 없음. `pytest -q` 360개 통과.
+- 공냉 역할(`air_cooling`) 신설, `default` 플래그 전환, 기본 랙 GB200, cp949 CLI 수정까지
+  모두 main 에 병합됐고 작업 브랜치·워크트리는 정리했다.
+- Streamlit Cloud 앱·Secrets·뷰어 초대까지 완료(사용자 직접 수행).
 
-1. 터미널에서 값 두 개를 만든다
-   - 쿠키 키: `python -c "import secrets; print(secrets.token_urlsafe(48))"`
-   - 사용자별 해시: `python scripts/hash_password.py` (사람마다 1회, 로그인 ID는 실명)
-2. <https://share.streamlit.io> → New app → `jamdu-pe/dc-design-tool` / `main` / `app.py`
-3. Deploy 전에 Advanced settings → Secrets 에 `[auth.cookie]` + `[auth.credentials…]` 붙여넣기
-4. Settings → Sharing → "Only specific people can view this app" → 사내 이메일 초대
-5. 확인: 로그인 화면이 먼저 뜨는가 / 틀린 비밀번호가 막히는가 / 로그인 후 `설계 실행`
-   과 `장비 교체` 드롭다운이 동작하는가
+원본 로드맵(Phase 0~5, 블루프린트 MVP/v1/v2)과 인수기준도 대조를 마쳤다 — 위
+"원본 로드맵 대조" 절 참고. **미완은 v2 의 TCO 비교엔진 하나뿐이고, 그것은 코드가
+아니라 단가 출처가 없어서 막힌 것이다.**
 
-Secrets 를 빠뜨려도 설계 화면이 공개되지는 않는다(안내만 띄우고 멈춘다).
+즉 **급한 일은 없다.** 다시 붙는다면 위 "다음 후보"에서 고르면 되고, 그중 1번
+(`capex_usd`)만이 실질적인 미해결 과제다. 나머지 둘은 개선 항목이지 결함이 아니다.
 
-코드 작업을 다시 잡는다면 위 "다음 후보" 2번(`capex_usd` 출처 확보)이 남은 전부다 —
-견적 등 별도 경로를 확보하기 전까지는 계속 "비용 미상"으로 보고하는 게 맞다.
+### 다시 시작할 때 먼저 확인할 것
+```
+git log --oneline -1        # 0a969e3 이후로 누가 더 손댔는지
+pytest -q                   # 360 passed 인지
+```
+로컬에서 웹 UI를 띄우려면 `.streamlit/secrets.toml` 이 필요하다(gitignore 라 저장소에
+없다). 새 PC라면 `README.md` "로그인 설정" 절대로 다시 만들어야 한다.
+
+### 이 세션에서 배운 것 (같은 함정 반복 방지)
+- **실행 중인 Streamlit 서버는 옛 상태를 문다.** `secrets.toml` 을 만들거나 라벨을 고친
+  뒤에는 반드시 재시작할 것. 포트가 8501/8502 로 갈리면 옛 창을 보고 있을 수 있다.
+- **`.streamlit/secrets.toml` 이 있으면 fail-closed 테스트가 무의미해진다.** Streamlit 이
+  secrets 를 CWD 기준으로 찾기 때문이다. `tests/test_auth.py` 의 `no_local_secrets`
+  픽스처가 빈 디렉터리로 옮겨 이 문제를 막는다 — 비슷한 테스트를 새로 쓸 때도 같은 처리 필요.
